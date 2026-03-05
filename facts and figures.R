@@ -37,6 +37,12 @@ m=emp44 %>% filter(s1_03a>=19) %>% nrow()
 n=emp44 %>% filter(s1_03a>=19,s2_09==2) %>% nrow() 
 n/m*100
 
+emp21 %>% names()
+emp21$s2_08b_b
 
 
+
+emp21 %>% filter(s2_05==1) %>% group_by(s2_08b_b,s2_08b_a) %>% count() %>% View()
+
+emp21 %>% filter(s2_05==1) %>% group_by(s2_08b_a) %>% count()
 
