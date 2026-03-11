@@ -25,6 +25,8 @@ save(emp21,emp22,emp23,emp24,emp31,emp32,emp33,emp34,emp41,emp42,emp43,emp44,emp
      file= "database/empleo/emp.RData")
 load("database/empleo/emp.RData")
 
+
+emp21
 # factores que afectan al participacion laboral     
 # factores sociales, edicacion, caracteristicas de salud
 names(emp41)
@@ -160,3 +162,6 @@ tabla_cruzada <- auxt %>%
     values_from = n,
     values_fill = 0
   )
+
+
+
