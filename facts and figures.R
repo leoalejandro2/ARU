@@ -25,8 +25,51 @@ save(emp21,emp22,emp23,emp24,emp31,emp32,emp33,emp34,emp41,emp42,emp43,emp44,emp
      file= "database/empleo/emp.RData")
 load("database/empleo/emp.RData")
 
+#####################################################################
+aux1 = emp21
 
-emp21
+aux1$mesb=ifelse(aux1$s2_08b_b==2,aux1$s2_08b_a*0.230137,ifelse(aux1$s2_08b_b==8,aux1$s2_08b_a*12,aux1$s2_08b_a))
+
+aux1$mesagrup = cut(aux1$mesb, 
+                    breaks = c(0,1,3,6,12,24,Inf),
+                    labels = c("< 1 mes", "1-3 meses", "3-6 meses", "6-12 meses", "12-24 meses", "> 24 meses"))
+
+aux1$mesagrup2 = cut(aux1$mesb, 
+                    breaks = c(0,3,6,12,Inf),
+                    labels = c("< 3 mes", "3-6 meses", "6-12 meses", "> 12 meses"))
+
+deg1 = svydesign(id = ~upm,
+                 strata = ~estrato,
+                 weights = ~fact_trim,
+                 data = aux1)
+
+aux1_deg = as_survey(deg1)
+options(survey.lonely.psu = "adjust")
+
+aux1_deg %>% filter(pet==1, pea==1, pead==1) %>% group_by() %>% summarise(n=survey_total())
+
+aux1_deg %>% group_by(pea,pead,s2_05,mesagrup) %>% summarise(n = survey_total())
+
+tab1 = aux1_deg %>% filter(pet==1, pea==1, pead==1) %>% group_by(s2_05,mesagrup2) %>% summarise(n=survey_total())
+
+tab1 %>% mutate(p=n/sum(n))
+
+
+###########################################################################################################
+
+aux1 = emp41
+aux2 = emp42
+aux3 = emp43
+aux4 = emp44
+
+
+tab2 = aux1 %>% filter(id_per_panel %in% aux2$id_per_panel) %>% left_join(aux2, by = "id_per_panel")
+
+tab2 %>% filter(pet.x==1) %>% group_by(s2_08a.x,,s2_05.x,s2_05.y) %>% count() %>% View()
+
+
+
+
 # factores que afectan al participacion laboral     
 # factores sociales, edicacion, caracteristicas de salud
 names(emp41)
