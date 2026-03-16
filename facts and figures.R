@@ -8,6 +8,7 @@ library(srvyr)
 library(stringr)
 library(tidyr)
 library(tseries)
+library(writexl)
 emp21 <- read_sav("database/empleo/ECE_1T2022.sav")
 emp22 <- read_sav("database/empleo/ECE_2T2022.sav")
 emp23 <- read_sav("database/empleo/ECE_3T2022.sav")
@@ -60,51 +61,26 @@ for (i in 1:length(bases)) {
   
   tab1 = aux1_deg %>% filter(pet==1, pea==1, pead==1,s2_05==1, !is.na(mesagrup2)) %>% 
     group_by(mesagrup2) %>% summarise(n=survey_total()) %>% mutate(p=n/sum(n))
+  tab11 = aux1_deg %>% filter(pead==1) %>% summarise(n=survey_total())
   
-  tiem_des = cbind(tiem_des,tab1$p)
+  tiem_des = cbind(tiem_des,c(tab1$p,tab11$n))
 }
 
 tiem_des= as.data.frame(t(tiem_des))
-names(tiem_des) = c("menor3m","de3a6m","de6a12m","mayor12m")
+names(tiem_des) = c("menor3m","de3a6m","de6a12m","mayor12m", "n")
 
 tiem_des$anio = c(sort(rep(c(2022,2023,2024),4)),2025,2025)
 tiem_des$trim = c((rep(c(1,2,3,4),3)),1,2)
 
-tiem_des = tiem_des %>% select(anio,trim,menor3m,de3a6m,de6a12m,mayor12m)
+tiem_des = tiem_des %>% select(anio,trim,menor3m,de3a6m,de6a12m,mayor12m,n)
 tiem_des
 
-data_long <- tiem_des %>%
-  pivot_longer(cols = menor3m:mayor12m,
-               names_to = "duracion",
-               values_to = "prop")
-
-ggplot(data_long,
-       aes(x = interaction(anio,trim),
-           y = prop,
-           fill = duracion)) +
-  geom_area() +
-  labs(x="Trimestre",
-       y="Proporción",
-       fill="Duración del desempleo")
-
-ggplot(data_long,
-       aes(x=interaction(anio,trim),
-           y=prop,
-           color=duracion,
-           group=duracion))+
-  geom_line(size=1)+
-  geom_point()
-
-ggplot(data_long,
-       aes(x=interaction(anio,trim),
-           y=prop,
-           fill=duracion))+
-  geom_col(position="fill")
-
-ts(tiem_des$mayor12m, start = c(2022,1), frequency = 4)
 
 
+#write_xlsx(tiem_des, "tiem_des.xlsx")
+aux1$s2_05
 
+aux1 %>% group_by(pet,pea,pead,s2_05) %>% count()
 ##########################################################################################################
 aux1 <- bases[[5]]
 
@@ -144,38 +120,55 @@ aux2 = emp42
 aux3 = emp43
 aux4 = emp44
 
-
 tab2 = aux1 %>% filter(id_per_panel %in% aux2$id_per_panel) %>% left_join(aux2, by = "id_per_panel")
 
-tab2 %>% filter(pet.x==1, pea.x==1, pead.x==1) %>% group_by(s2_08a.x,s2_05.y) %>% count() 
+aux1$fact_mes
+tab2$peso_panel = tab2$fact_trim.x
+deg_panel = svydesign(
+  id = ~upm.x,
+  strata = ~estrato.x,
+  weights = ~peso_panel,
+  data = tab2
+)
 
-tab2 %>% filter(pet.x==1, pea.x==1, pead.x==1) %>% count(s2_08a.x,pead.y) %>% 
+panel_srv <- as_survey(deg_panel)
+
+tab2=panel_srv %>% 
+  filter(pet.x==1, pea.x==1, pead.x==1, s2_05.x==1) %>%
+  group_by(s2_08a.x, s2_05.y) %>% 
+  summarise(n = survey_total()) %>% 
   pivot_wider(
-    names_from = pead.y,
+    names_from = s2_05.y,
     values_from = n,
     values_fill = 0
-  ) %>% arrange(desc(`0`)) %>% 
-  mutate(
-    total = rowSums(across(c(`0`,`1`,`NA`)), na.rm = TRUE),
-    across(c(`0`,`1`,`NA`), ~ . / total * 100)
+  ) 
+
+tab22 = tab2 %>%  group_by(s2_08a.x) %>% summarise(si=sum(`1`),no=sum(`2`),po=sum(`NA`)) %>% 
+  arrange(desc(po+si+no))
+
+tab22$s2_08a.x=as.character(as_factor(tab22$s2_08a.x))
+
+tab22$s2_08a.x[tab22$s2_08a.x %in% tab22$s2_08a.x[(nrow(tab22)-3):nrow(tab22)]]= "0. Otros"
+
+ntab2 = tab22 %>% group_by(s2_08a.x) %>% summarise(si=sum(si),no=sum(no),po=sum(po)) %>% 
+  arrange(desc(si + no + po))
+
+
+ntab2$s2_08a.x = gsub("^[0-9]+\\.\\s*", "", ntab2$s2_08a.x)
+
+
+ntab2 = ntab2 %>% mutate(
+    total = si + no + po,
+    across(c(si, no, po), ~ . / total )
   ) %>% 
-  select(-total)
+  select(-total) %>% 
+  arrange(desc(si + no + po))
 
+ntab2
 
+#write_xlsx(ntab2, "aux1.xlsx")
 # factores que afectan al participacion laboral     
 # factores sociales, edicacion, caracteristicas de salud
-names(emp41)
-aux1=emp41 %>% select(depto:s1_14esp,pet,pea,pead,peadces,peadasp,s2_05,s2_08a,s2_08b_a,s2_08b_b,estrato,upm,fact_mes,fact_trim)
-
-aux1$mesb=ifelse(aux1$s2_08b_b==2,aux1$s2_08b_a*0.230137,ifelse(aux1$s2_08b_b==8,aux1$s2_08b_a*12,aux1$s2_08b_a))
-
-aux1$mesagrup = cut(aux1$mesb, 
-                    breaks = c(0,1,3,6,12,24,Inf),
-                    labels = c("< 1 mes", "1-3 meses", "3-6 meses", "6-12 meses", "12-24 meses", "> 24 meses"))
-
-aux1 %>% filter(s2_05==1) %>% group_by(s2_08a) %>% count()
-table(emp41$s2_08e)
-
 #########################################################################################################3
 emp24 %>% filter(id_per_panel %in% emp21$id_per_panel) 
 emp21 %>% filter(id_per_panel %in% emp24$id_per_panel) 
@@ -187,10 +180,7 @@ emp21$pea
 ### estrategia de busqueda 
 
 
-#############################################################################################
-aux1 %>% names()
-aux1 %>% filter(pead==1) %>% nrow()
-aux1 %>% filter(!is.na(s2_08b_a)) %>% nrow()
+##############################################
 
 deg1 = svydesign(id = ~upm,
           strata = ~estrato,
@@ -200,30 +190,10 @@ deg1 = svydesign(id = ~upm,
 aux1_deg = as_survey(deg1)
 options(survey.lonely.psu = "adjust")
 
-tab1 = aux1_deg %>% filter(peadces==1) %>% group_by(s2_05) %>% summarise(n=survey_total())
-tab1 %>% mutate(busca = n/sum(n))
 
-distribucion = aux1_deg %>% filter(pead==1,!is.na(mesagrup)) %>% group_by(mesagrup) %>% summarise(n = survey_total())
-
-distribucion = distribucion %>% mutate(p=n/sum(n))
-distribucion = distribucion %>% mutate(F = cumsum(p))
-sum(distribucion$p[5:6])
-
-plot(distribucion$F)
-
-hist(distribucion$p,breaks = 10)
-
-aux1_deg %>% group_by(pead) %>% summarise(n = survey_total())
-
-aux1_deg %>% group_by(s2_05) %>% summarise(n = survey_total()) %>% View()
-
-aux1_deg %>% group_by(s2_08a) %>% summarise(n=survey_total()) %>% View()
-
-
-########
 tab1 = aux1_deg %>% filter(s2_05==1) %>% group_by(s2_08a) %>%
   summarise(n=survey_total()) %>% arrange(desc(n)) %>% mutate(id=row_number())
-tab1 = tab1 %>% mutate(p=(n/sum(n)*100))
+tab1 = tab1 %>% mutate(p=(n/sum(n)))
 tab1$s2_08a=as.character(as_factor(tab1$s2_08a))
 tab1$s2_08a[tab1$s2_08a %in% tab1$s2_08a[(nrow(tab1)-4):nrow(tab1)]]= "0. Otros"
 
@@ -232,6 +202,7 @@ ntab1 = tab1 %>% group_by(s2_08a) %>% summarise(p=sum(p)) %>% arrange(desc(p))
 
 ntab1$s2_08a = gsub("^[0-9]+\\.\\s*", "", ntab1$s2_08a)
 
+write_xlsx(ntab1, "aux1.xlsx")
 
 ntab1$s2_08a <- str_wrap(ntab1$s2_08a, width = 30)
 
