@@ -120,7 +120,7 @@ aux2 = emp42
 aux3 = emp43
 aux4 = emp44
 
-tab2 = aux1 %>% filter(id_per_panel %in% aux2$id_per_panel) %>% left_join(aux2, by = "id_per_panel")
+tab2 = aux1 %>% filter(id_per_panel %in% aux4$id_per_panel) %>% left_join(aux4, by = "id_per_panel")
 
 aux1$fact_mes
 tab2$peso_panel = tab2$fact_trim.x
@@ -148,7 +148,7 @@ tab22 = tab2 %>%  group_by(s2_08a.x) %>% summarise(si=sum(`1`),no=sum(`2`),po=su
 
 tab22$s2_08a.x=as.character(as_factor(tab22$s2_08a.x))
 
-tab22$s2_08a.x[tab22$s2_08a.x %in% tab22$s2_08a.x[(nrow(tab22)-3):nrow(tab22)]]= "0. Otros"
+tab22$s2_08a.x[tab22$s2_08a.x %in% tab22$s2_08a.x[(nrow(tab22)-2):nrow(tab22)]]= "0. Otros"
 
 ntab2 = tab22 %>% group_by(s2_08a.x) %>% summarise(si=sum(si),no=sum(no),po=sum(po)) %>% 
   arrange(desc(si + no + po))
@@ -166,7 +166,7 @@ ntab2 = ntab2 %>% mutate(
 
 ntab2
 
-#write_xlsx(ntab2, "aux1.xlsx")
+write_xlsx(ntab2, "aux1.xlsx")
 # factores que afectan al participacion laboral     
 # factores sociales, edicacion, caracteristicas de salud
 #########################################################################################################3
