@@ -1,5 +1,6 @@
-install.packages("oaxaca")
-install.packages("UpSetR")
+#install.packages("oaxaca")
+#install.packages("UpSetR")
+#install.packages("sjlabelled")
 library("oaxaca")
 library("haven")
 library("dplyr")
@@ -9,64 +10,35 @@ library(srvyr)
 library(stringr)
 library(tidyr)
 library(UpSetR)
-eh24 <- read_sav("database/EH/EH2024/EH2024_Persona.sav")
-
-
-eh24 %>% View()
-eh24$estrato
-eh24$s03a_02a
-
-folio=(eh24 %>% group_by(folio) %>% count())$folio
-
-estrato=(eh24 %>% group_by(estrato) %>% count())$estrato
-
-upm=(eh24 %>% group_by(upm) %>% count())$upm
-#######################################################################################
-
-deg1 = svydesign(id = ~upm,
-                 strata = ~estrato,
-                 weights = ~factor,
-                 data = eh24)
-
-eh24d = as_survey(deg1)
-options(survey.lonely.psu = "adjust")
-
-eh24d %>% filter(area==1,niv_ed_g==4) %>% group_by(s01a_02,s01a_09) %>% 
-  summarise(a=survey_mean(aestudio,na.rm = TRUE), y = survey_mean(ylab,na.rm=TRUE)) 
-
-
-eh24 %>% filter(area==1, niv_ed_g==4, cob_op == 4) %>% 
-  group_by(s01a_09) %>% summarise(a=mean(aestudio, na.rm=TRUE,),y=mean(ylab,na.rm=TRUE)) 
-
-
-eh24$cob_op
-eh24$s01a_02
-eh24$cob_op
-eh24$cob_op
-eh24$depto
-eh24$s03a_02a>=72
-eh24$niv_ed_g
-###########################################################################################
-eh24 %>% names()
-eh24$s01a_09
-
-
-eh24$ind <- ifelse(eh24$s01a_09 == 1, 1, 0)
-
-oaxaca(formula = ylab ~ aestudio | ind, data = eh24)
-
-
-table(eh24$s01b_11a)
-
-table(eh24$s01b_11d)
-
-eh24 %>% filter(area==1,niv_ed_g==4) %>% group_by(s01a_09, s01a_02) %>% 
-  summarise(a = mean(aestudio,na.rm=TRUE),y=mean(ylab,na.rm=TRUE))
+library(sjlabelled)
 
 ############################################################################################
 
 eh24 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
-eh24dis <- read_sav("database/EH/EH2024/EH2024_Discriminacion.sav")
+eh24dis = read_sav("database/EH/EH2024/EH2024_Discriminacion.sav")
+eds23h = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
+eds23p = read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
+eds23v = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
+eds23m = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
+
+eds23h %>% filter(hs01_0004a<=59) %>% nrow()
+eds23p %>% nrow()
+eds23h$hs01_0004a
+
+eds23p %>% select(hs05_0095:hs05_0098,hs06_0120:hs06_0122, ponderador_mpt, 
+                  ponderador_mhm, imc_m, categimc_m,categaimc_m) %>% 
+  mutate(imcy = hs05_0095/((hs05_0096/100)**2)) %>% View()
+
+hist(eds23p$imc_m)
+
+
+
+get_label(eds23p) %>% View()
+
+a %>% View()
+
+eh24dis$s09a_01k
+
 eh24$s01a_03
 
 
@@ -75,11 +47,22 @@ eh24dis %>% nrow()
 aux1 = eh24dis %>%
   mutate(discriminacion =ifelse(rowSums(across(s09a_01a:s09a_01l, ~ .x %in% c(1,3)))>0,1,0))
 
-aux1 %>% group_by(discriminacion = ) 
+
 
 
 table(aux1$discriminacion)/nrow(aux1)
-
+table(aux1$s09a_01a)/nrow(aux1)
+table(aux1$s09a_01b)/nrow(aux1)
+table(aux1$s09a_01c)/nrow(aux1)
+table(aux1$s09a_01d)/nrow(aux1)
+table(aux1$s09a_01e)/nrow(aux1)
+table(aux1$s09a_01f)/nrow(aux1)
+table(aux1$s09a_01g)/nrow(aux1)
+table(aux1$s09a_01h)/nrow(aux1)
+table(aux1$s09a_01i)/nrow(aux1)
+table(aux1$s09a_01j)/nrow(aux1)
+table(aux1$s09a_01k)/nrow(aux1)
+table(aux1$s09a_01l)/nrow(aux1)
 
 eh24dis %>% group_by(s09a_01a) %>% summarise(total = n()/nrow(eh24dis))
 
