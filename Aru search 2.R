@@ -11,29 +11,14 @@ edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
-edsa$hs03_0030
-edsa$hs03_0031
-edsa$hs03_0032_A
-edsa$hs03_0033
-edsa$hs03_0034_A
-
-edsa$hs03_0035_A
-edsa$hs03_0035_Z
-
-edsa$hs03_0037_A
-edsa$hs03_0037_I
-
-edsa$hs03_0039_A
-edsa$hs03_0039_Z
-
-edsa$hs03_0033
-edsa$hs03_0040
-edsa$hs03_a_0041
 
 ### 
 
 # Disponibilidad
-edsa %>% select(hs03_0035_A:hs03_0035_Z) %>% View()
+edsa %>% select(hs03_0035_A:hs03_0035_Z)
+
+edsa %>% filter(hs03_0033 ==1) %>% select(hs03_0035_A:hs03_0035_Z) %>% View()
+
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
 # Accesibilidad 
 edsa %>% select(hs03_0035_A:hs03_0035_Z)
