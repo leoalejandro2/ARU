@@ -13,29 +13,104 @@ edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
 
 ### 
+edsa %>% filter((hs03_0033 == 1)) %>% get_labels()
+edsa$
+get_label(edsa)
 
+# -------------------------------
 # Disponibilidad
-edsa %>% select(hs03_0035_A:hs03_0035_Z)
-
-edsa %>% filter(hs03_0033 ==1) %>% select(hs03_0035_A:hs03_0035_Z) %>% View()
-
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
-# Accesibilidad 
+# -------------------------------
 edsa %>% select(hs03_0035_A:hs03_0035_Z)
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
-# Alojamiento
+
+# Cantidad de servicios disponibles en relación con 
+# la cantidad y tipo de necesidades de la población
+
+edsa %>% select()
+
+
+# -------------------------------
+# Accesibilidad
+# -------------------------------
+edsa %>% select(hs03_0035_A:hs03_0035_Z)
+edsa %>% select(hs03_0039_A:hs03_0039_Z)
+
+# Localización de los servicios de salud y de los usuarios,
+# incluyendo recursos de transporte, tiempo, distancia y costo
+
+
+# -------------------------------
+# Alojamiento (Accommodation)
+# -------------------------------
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
 edsa %>% select(hs03_b_0046:hs03_b_0048)
-# Asequibilidad 
+
+# Forma en que los servicios de salud están organizados
+# para atender a los usuarios (horarios, turnos, tiempos de espera)
+
+
+# -------------------------------
+# Asequibilidad
+# -------------------------------
 edsa %>% select(hs03_0029_A:hs03_0029_X_cod)
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
+
+# Relación entre el costo de los servicios y la capacidad
+# de pago de los usuarios
+# Incluye:
+# - Existencia de seguro médico
+# - Percepción del costo
+# - Gastos en atención de salud
+
+
+# -------------------------------
 # Aceptabilidad
+# -------------------------------
+
+## The acceptability dimension will be constructed using a summated rating scale derived from binary response variables
+
+
 edsa %>% select(hs03_0037_A:hs03_0037_I)
-edsa %>% select(hs03_0039_A:hs03_0039_Z) View()
+edsa %>% select(hs03_0039_A:hs03_0039_Z)
+
+# Relación entre las actitudes de los usuarios y las 
+# características del personal de salud (idioma, trato,
+# respeto cultural, etc.)
+
+edsa %>% filter(hs03_0033 == 1 , is.na(hs03_0035_V)) %>% 
+  select(hs03_0037_A:hs03_0037_I) %>% nrow()
+
+
+edsa %>% 
+  filter(hs03_0033 == 1,
+         !is.na(hs03_0037_A),
+         !is.na(hs03_0037_H),
+         hs03_0037_A != 999) %>% 
+  select(hs03_0037_A:hs03_0037_I) %>% summary()
+
+edsa_accept <- edsa %>% 
+  filter(hs03_0033 == 1,
+         !is.na(hs03_0037_A),
+         !is.na(hs03_0037_H),
+         hs03_0037_A != 999) %>% 
+  mutate(across(hs03_0037_A:hs03_0037_I,
+                ~ case_when(
+                  . == 1 ~ 1,
+                  . == 2 ~ 0
+                ))) %>% 
+  mutate(acceptability = rowSums(across(hs03_0037_A:hs03_0037_I), 
+                                 na.rm = TRUE))
+
+edsa_accept <- edsa_accept %>% 
+  mutate(acceptability_std = 
+           (1 - ((acceptability - min(acceptability, na.rm = TRUE)) /
+           (max(acceptability, na.rm = TRUE) - 
+              min(acceptability, na.rm = TRUE)))))
 
 
 
-
+edsa_accept
+hist(edsa_accept$acceptability_std, breaks = 8)
 
 
 

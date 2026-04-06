@@ -16,10 +16,56 @@ library(sjlabelled)
 
 eh24 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
 eh24dis = read_sav("database/EH/EH2024/EH2024_Discriminacion.sav")
-eds23h = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
-eds23p = read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
-eds23v = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
-eds23m = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
+
+edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
+edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
+edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
+edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
+edsap = read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
+
+
+edsap %>% get_label()
+
+edsag %>% get_label()
+
+
+edsaph = edsap %>% select(folio, nro, upm, estrato, hs05_0103, hs05_0104, hs05_0105, hs05_0106,
+                          ponderador_vpt, area, altitud, imc_h, categimc_h, categaimc_h)
+
+
+
+edsagh = edsah %>% right_join(edsaph, by = c("folio", "nro", "upm"))
+
+edsagh %>% get_label() %>% View()
+
+edsagh %>% 
+  filter(vs01_0101a >= 6, vs01_0101a <= 59) %>% 
+  pull(imc_h) %>% 
+  hist()
+
+edsagh %>% 
+  filter(vs01_0101a >= 6, vs01_0101a <= 59) %>% 
+  with(plot(vs01_0101a, imc_h))
+
+edsagh %>% 
+  filter(vs01_0101a >= 6, vs01_0101a <= 59) %>% 
+  with(plot(vs01_0124, imc_h))
+
+
+
+
+###############################################################################################
+
+edsapm = edsap %>% select(folio, nro, upm, estrato, hs05_0095, hs05_0096, hs05_0097, hs05_0098,
+                          hs06_0119, hs06_0120, hs06_0121, hs06_0122, ponderador_mpt, 
+                          ponderador_mhm, area, altitud, imc_m, categimc_m, categaimc_m)
+
+
+
+
+
+
+
 
 eds23h %>% filter(hs01_0004a<=59) %>% nrow()
 eds23p %>% nrow()
@@ -33,7 +79,7 @@ hist(eds23p$imc_m)
 
 
 
-get_label(eds23p) %>% View()
+get_label(eds23p)
 
 a %>% View()
 
@@ -69,3 +115,7 @@ eh24dis %>% group_by(s09a_01a) %>% summarise(total = n()/nrow(eh24dis))
 mean(eh24dis$ponderador)
 
 hist(eh24dis$ponderador)
+
+
+
+
