@@ -5,6 +5,9 @@ library("dplyr")
 eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
 eh18 = read_sav("database/EH/EH2018/EH2018_Discriminacion.sav")
 
+# edsa <- read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
+
+
 
 edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
 edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
@@ -71,7 +74,7 @@ edsa %>% select(hs03_0039_A:hs03_0039_Z)
 
 
 edsa %>% select(hs03_0037_A:hs03_0037_I)
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
+edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
 
 # Relación entre las actitudes de los usuarios y las 
 # características del personal de salud (idioma, trato,

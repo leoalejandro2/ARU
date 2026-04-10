@@ -17,24 +17,25 @@ library(sjlabelled)
 eh24 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
 eh24dis = read_sav("database/EH/EH2024/EH2024_Discriminacion.sav")
 
+edsahijos <- read_sav("database/EDSA/EDSA2023/EDSA2023_HistorialHijos.sav")
+edsapari <- read_sav("database/EDSA/EDSA2023/EDSA2023_HistorialParidad.sav")
 edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
-edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
+edsamc <- read_sav("database/EDSA/EDSA2023/EDSA2023_MujerCalendario.sav")
 edsap = read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
-
+edsapi <- read_sav("database/EDSA/EDSA2023/EDSA2023_PrimeraInfancia.sav")
+edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 
 edsap %>% get_label()
-
-edsag %>% get_label()
-
+table(edsa$afilsegsal)
 
 edsaph = edsap %>% select(folio, nro, upm, estrato, hs05_0103, hs05_0104, hs05_0105, hs05_0106,
                           ponderador_vpt, area, altitud, imc_h, categimc_h, categaimc_h)
 
 
 
-edsagh = edsah %>% right_join(edsaph, by = c("folio", "nro", "upm"))
+edsagh = edsah %>% right_join(edsaph, by = c("folio", "nro", "upm","estrato"))
 
 edsagh %>% get_label() %>% View()
 
