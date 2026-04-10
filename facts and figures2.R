@@ -25,6 +25,7 @@ emp52 <- read_sav("database/empleo/ECE_2T2025.sav")
 emp41 %>% get_label()
 
 
+<<<<<<< HEAD
 emp41 %>% select(cob_op,caeb_op)
 
 hist(emp41$tothrs_ef)
@@ -43,4 +44,25 @@ emp42 %>%
 
 
 
+=======
+edsah <- read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
+edsape <- read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
+
+edsag = edsah %>% left_join(edsape, by = c("folio","nro"))
+
+edsah %>% filter(hs03_0033==1) %>% group_by(hs03_0034_T) %>% 
+  count()
+
+edsah %>% filter(hs03_0033==1, hs03_0034_T == 1) %>% 
+  group_by(hs03_0035_V) %>% count()
+
+
+
+edsah %>% filter(hs03_a_0041==1,hs03_a_0042_I==1) %>% 
+  group_by(hs03_a_0043_V) %>% count()
+
+
+edsag %>% group_by(tip_anemia_m, hs03_0033) %>% count()
+
+>>>>>>> d17fb2a1c62df0f413faf199438bf04916dd5c66
 
