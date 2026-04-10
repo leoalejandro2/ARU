@@ -9,13 +9,23 @@ library(tseries)
 library(writexl)
 
 
-eh24 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
+edsah <- read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
+edsape <- read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
 
-table(eh24$phrs)
-table(eh24$shrs)
+edsag = edsah %>% left_join(edsape, by = c("folio","nro"))
+
+edsah %>% filter(hs03_0033==1) %>% group_by(hs03_0034_T) %>% 
+  count()
+
+edsah %>% filter(hs03_0033==1, hs03_0034_T == 1) %>% 
+  group_by(hs03_0035_V) %>% count()
 
 
-eh24 %>% summarise(hl = s04b_15*s04b_16aa ) %>% table()
 
-table(eh24$s04b_15*eh24$s04b_16aa)
+edsah %>% filter(hs03_a_0041==1,hs03_a_0042_I==1) %>% 
+  group_by(hs03_a_0043_V) %>% count()
+
+
+edsag %>% group_by(tip_anemia_m, hs03_0033) %>% count()
+
 
