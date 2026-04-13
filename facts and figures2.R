@@ -7,6 +7,8 @@ library(stringr)
 library(tidyr)
 library(tseries)
 library(writexl)
+library(tidyverse)
+library(pheatmap)
 
 
 eh24 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
@@ -44,8 +46,7 @@ aux1 %>% get_label()
 
 ######################################################
 edsa16h = read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
-
-
+edsa16hj = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_HISTORIA_NACIMIENTOS.sav")
 
 edsah <- read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
 edsape <- read_sav("database/EDSA/EDSA2023/EDSA2023_Peso_talla_hemo.sav")
@@ -55,13 +56,26 @@ edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
 edsadm = read_sav("database/EDSA/EDSA2023/EDSA2023_HistorialHijos.sav")
 
-
 aux2 = edsadm %>% group_by(folio,nro) %>% count() %>% left_join(edsah, by = c("folio","nro"))
 
-aux2$hs01_0004a
+aux2 = aux2 %>% 
+  mutate(gedad = case_when(
+    hs01_0004a <= 20 ~ "0-20",
+    hs01_0004a <= 30 ~ "21-30",
+    hs01_0004a <= 40 ~ "31-40",
+    TRUE ~ "41+"
+  ))
 
-ggplot(aux2, aes(x = factor(hs01_0004a), y = n)) +
+ggplot(aux2, aes(x = factor(gedad), y = n)) +
   geom_boxplot()
+
+
+
+
+
+
+
+
 
 edsah$hs01_0003
 hist(edsah$hs01_0004a)
@@ -132,4 +146,119 @@ edsag$tip_anemia_m
 edsag$categimc_m
 edsag$hs03_0033
 edsape %>% get_label()
+
+
+###############################################################################################
+
+eh24 = read_sav("database/EH/EH2024/EH2024_Discriminacion.sav")
+eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
+eh22 = read_sav("database/EH/EH2022/EH2022_Discriminacion.sav")
+eh21 = read_sav("database/EH/EH2021/EH2021_Discriminacion.sav")
+eh19 = read_sav("database/EH/EH2019/EH2019_Discriminacion.sav")
+
+
+
+aux1 = eh21 %>% mutate(dis = ifelse(rowSums(across(s10a_01a:s10a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux2 = eh22 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux3 = eh23 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+
+
+aux4 = eh19 %>% mutate(dis = ifelse(rowSums(across(s12a_01a:s12a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux5 = eh24 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+
+aux4 %>% group_by(dis) %>% summarise(n = sum(Ponderador)) %>% mutate(n = n/sum(n)*100)
+
+aux1 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
+aux2 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
+aux3 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
+aux5 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
+
+res <- bind_rows(
+  aux4 %>% group_by(dis) %>% summarise(n = sum(Ponderador)) %>% mutate(base = "2019"),
+  aux1 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2021"),
+  aux2 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2022"),
+  aux3 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2023"),
+  aux5 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2024")
+) %>% 
+  group_by(base) %>% 
+  mutate(porcentaje = n/sum(n)*100)
+
+res
+
+#write_xlsx(res,"tab.xlsx")
+AUX5 %>% group_by()
+
+
+
+datos_matriz <- eh24 %>%
+  select(s09a_01a:s09a_01l, ponderador) %>% # Ajusta 'factor_expansion' al nombre real de tu variable
+  mutate(across(s09a_01a:s09a_01l, ~if_else(. %in% c(1, 3), 1, 0, missing = 0)))
+
+# 2. Renombrar para que el gráfico sea legible
+colnames(datos_matriz) <- c("Color Piel", "NPIOC", "Procedencia", "LGBTQ+", "Edad", 
+                            "Sexo", "Idioma", "Vestimenta", "Discapacidad", 
+                            "Religión", "Económica", "Otro", "peso")
+
+# 3. Calcular la matriz de co-ocurrencia ponderada
+# Extraemos solo las columnas de motivos
+motivos <- datos_matriz %>% select(-peso) %>% as.matrix()
+w <- datos_matriz$peso
+
+# Calculamos la matriz: t(motivos) %*% (motivos * peso)
+# Esto suma los pesos de cada intersección
+matriz_ponderada <- t(motivos) %*% (motivos * w)
+
+
+pheatmap(matriz_ponderada, 
+         display_numbers = TRUE, 
+         number_format = "%.0f",        # Muestra la población estimada en números enteros
+         color = colorRampPalette(c("#ffffff", "#f28e2b", "#b07aa1"))(100), 
+         main = "Interseccionalidad de la Discriminación (Datos Ponderados EH2024)",
+         fontsize_number = 7,
+         angle_col = 45)
+
+
+eh24 %>% group_by(s09a_01a) %>% summarise(sum(ponderador))
+
+# 1. Preparación de variables binarias (aplicando tu lógica: 1 y 3 son 'Si')
+# Filtramos primero la sección que tiene datos (n = 15000)
+datos_disc <- eh24 %>%
+  filter(!is.na(s09a_01a)) %>% 
+  select(s09a_01a:s09a_01l, ponderador) %>% # Usa el nombre de tu variable ponderadora
+  mutate(across(s09a_01a:s09a_01l, ~if_else(. %in% c(1, 3), 1, 0, missing = 0)))
+
+# 2. Renombrar columnas para claridad
+colnames(datos_disc) <- c("Color Piel", "NPIOC", "Procedencia", "LGBTQ+", "Edad", 
+                          "Sexo", "Idioma", "Vestimenta", "Discapacidad", 
+                          "Religión", "Económica", "Otro", "w")
+
+# 3. Calcular Matriz de Co-ocurrencia Ponderada
+m_motivos <- as.matrix(datos_disc %>% select(-w))
+pesos <- datos_disc$w
+
+# Suma de pesos donde ocurren ambos motivos
+matriz_co <- t(m_motivos) %*% (m_motivos * pesos)
+
+pheatmap(matriz_co, 
+         display_numbers = TRUE, 
+         number_format = "%.0f", 
+         color = colorRampPalette(c("white", "#deebf7", "#3182bd"))(100),
+         main = "Heatmap: Co-ocurrencia Ponderada (n=15,000)",
+         fontsize_number = 8)
+
+
+# Normalizamos la matriz por la diagonal (total de cada motivo)
+matriz_porcentaje <- sweep(matriz_co, 1, diag(matriz_co), "/") * 100
+
+pheatmap(matriz_porcentaje, 
+         display_numbers = TRUE, 
+         number_format = "%.1f%%", 
+         color = colorRampPalette(c("white", "#fee0d2", "#de2d26"))(100),
+         main = "Interseccionalidad: % de solapamiento entre motivos")
+
+
 
