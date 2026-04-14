@@ -118,5 +118,13 @@ mean(eh24dis$ponderador)
 hist(eh24dis$ponderador)
 
 
+##################################################################################################3
+
+library(rvest)
+ac=read_html("https://estadisticas.minsalud.gob.bo/Reportes_Dinamicos/WF_Reporte_Gral_2025.aspx")
+
+ac %>% html_nodes('#MainContent_DDL_sedes') %>% html_text()
+
+ac %>% html_table()
 
 

@@ -156,6 +156,17 @@ eh22 = read_sav("database/EH/EH2022/EH2022_Discriminacion.sav")
 eh21 = read_sav("database/EH/EH2021/EH2021_Discriminacion.sav")
 eh19 = read_sav("database/EH/EH2019/EH2019_Discriminacion.sav")
 
+eh24 %>% get_label()
+
+eh24 %>% group_by(s09a_01k,s09a_01h) %>% summarise(n = sum(ponderador)) %>% pull(n) %>% sum()
+
+eh24 %>% filter(s09a_02==2) %>% group_by(s09a_05_6) %>% summarise(n = sum(ponderador)) %>% 
+  mutate(n = n/sum(n) *100)
+
+
+(163+1.28+9.75)/12615 *100
+
+
 
 
 aux1 = eh21 %>% mutate(dis = ifelse(rowSums(across(s10a_01a:s10a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
@@ -191,8 +202,20 @@ res
 
 #write_xlsx(res,"tab.xlsx")
 AUX5 %>% group_by()
+aux5$s09a_02
 
+res2 = aux5 %>% filter(dis=="Si") %>% group_by(s09a_02, s09a_04) %>% summarise(n = sum(ponderador))
 
+#writes09a_02write_xlsx(res2, "tab.xlsx")
+aux5$s09a_04
+
+aux5$s09a_05_4
+aux5$s09a_05_7
+aux5$s09a_01a
+aux5 %>% filter(s09a_02==2) %>% group_by(s09a_05_4) %>% summarise(n = sum(ponderador)) %>% 
+  mutate(n = n / sum(n))
+
+aux5 %>% group_by(s09a_01a) %>% summarise(n = sum(ponderador))
 
 datos_matriz <- eh24 %>%
   select(s09a_01a:s09a_01l, ponderador) %>% # Ajusta 'factor_expansion' al nombre real de tu variable
