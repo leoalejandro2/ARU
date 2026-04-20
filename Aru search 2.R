@@ -26,20 +26,68 @@ edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
 
 ### 
+edsaV %>% get_label()
 edsa %>% filter((hs03_0033 == 1)) %>% get_labels()
-edsa$
+
+edsa %>% pull(afilsegsal) %>% table()
+  
+edsa %>% get_label()
+  
 get_label(edsa)
+#establecimiento o servicio de salud
+edsa %>% filter(hs03_0033==1,
+                hs03_0035_A==1,   # puesto de salud
+                hs03_0035_B==1,   # centro de salud ambulatorio
+                hs03_0035_C==1,   # centro de salud con internacion
+                hs03_0035_D==1,   # centro de salud integral
+                hs03_0035_E==1,   # hospital de segundo nivel
+                hs03_0035_F==1,   # hospital de tercer nivel
+                hs03_0035_G==1,   # hospital especializado
+                hs03_0035_H==1,   # caja nacional de salud
+                hs03_0035_I==1,   # caja de la banca privada
+                hs03_0035_J==1,   # caja petrolera
+                hs03_0035_K==1,   # caja de la banca estatal
+                hs03_0035_L==1,   # cordes
+                hs03_0035_M==1,   # caja de caminos
+                hs03_0035_N==1,   # cossmil/FFAA
+                hs03_0035_O==1,   # seguro universitario
+                hs03_0035_P==1,   # organismos privados 1,2,3
+                hs03_0035_Q==1,   # iglesias 1, 2, 3
+                hs03_0035_R==1,   # promotor de la salud/RPS/otro agente
+                hs03_0035_S==1,   # visita domiciliaria
+                hs03_0035_T==1,   # Farmacia
+                hs03_0035_U==1,   # Medicina tradicional
+                hs03_0035_V==1,   # No acudio a ningun centro de salud
+                hs03_0035_X==1,   # otro lugar
+                hs03_0035_Z==1,   # no sabe
+                hs03_0035_X_cod==1,)    # especificar otro lugar
+
+
+
+
+
+
+edsa %>% get_label()
+
+edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>% 
+  group_by(hs01_0010) %>% mutate(n = n / sum(n))
 
 # -------------------------------
 # Disponibilidad
 # -------------------------------
-edsa %>% select(hs03_0035_A:hs03_0035_Z)
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
+edsa %>% select(hs03_0035_A:hs03_0035_Z) %>% get_label()
+edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
 
 # Cantidad de servicios disponibles en relación con 
 # la cantidad y tipo de necesidades de la población
 
-edsa %>% select()
+edsa %>% filter(hs03_0033==1)
+
+
+aux1 = edsa %>% filter(hs03_0033 == 1, hs03_0035_V == 1, hs03_0039_A==1 | hs03_0039_B==1 |
+                         hs03_0039_E == 1 | hs03_0039_G == 1 | hs03_0039_H == 1 |
+                         hs03_0039_I == 1 | hs03_0039_M == 1 | hs03_0039_X_cod %in% c('R','U','V'))
+
 
 
 # -------------------------------
@@ -47,6 +95,8 @@ edsa %>% select()
 # -------------------------------
 edsa %>% select(hs03_0035_A:hs03_0035_Z)
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
+
+
 
 # Localización de los servicios de salud y de los usuarios,
 # incluyendo recursos de transporte, tiempo, distancia y costo
@@ -68,6 +118,10 @@ edsa %>% select(hs03_b_0046:hs03_b_0048)
 edsa %>% select(hs03_0029_A:hs03_0029_X_cod)
 edsa %>% select(hs03_0039_A:hs03_0039_Z)
 
+
+edsa %>% filter(hs03_0033 == 1, hs03_0039_J==1)
+
+
 # Relación entre el costo de los servicios y la capacidad
 # de pago de los usuarios
 # Incluye:
@@ -82,6 +136,13 @@ edsa %>% select(hs03_0039_A:hs03_0039_Z)
 
 ## The acceptability dimension will be constructed using a summated rating scale derived from binary response variables
 
+aux1 = edsa %>% filter(hs03_0033 == 1) %>% select(hs03_0037_A:hs03_0037_I)
+aux1 %>% get_label()
+
+aux1 %>% 
+
+aux1 %>% mutate(across(hs03_0037_A:hs03_0037_I, 
+                       ))
 
 edsa %>% select(hs03_0037_A:hs03_0037_I)
 edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
@@ -122,7 +183,13 @@ edsa_accept <- edsa_accept %>%
 
 
 
-edsa_accept
+edsa_accept %>% get_label()
+edsa_accept %>% group_by(hs01_0010) %>% summarise(mean(acceptability_std))
+edsa_accept$aestudio
+
+
+plot(edsa_accept$aestudio, edsa_accept$acceptability_std)
+
 hist(edsa_accept$acceptability_std, breaks = 8)
 
 
