@@ -177,6 +177,20 @@ aux3 = eh23 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c
 aux4 = eh19 %>% mutate(dis = ifelse(rowSums(across(s12a_01a:s12a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
 aux5 = eh24 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
 
+
+
+aux6 = eh24 %>% mutate(dis = ifelse(rowSums(across(s09a_01d:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux6 = aux6 %>% mutate(rac = ifelse(rowSums(across(s09a_01a:s09a_01c, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+
+aux6 %>% group_by(dis) %>% summarise(n=sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+aux6 %>% group_by(rac) %>% summarise(n=sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
+aux6 %>% group_by(dis, rac) %>% summarise(n=sum(ponderador))  %>% 
+  ungroup() %>% mutate(n = n/sum(n) * 100)
+
+
+
+
 aux4 %>% group_by(dis) %>% summarise(n = sum(Ponderador)) %>% mutate(n = n/sum(n)*100)
 
 aux1 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
@@ -186,6 +200,7 @@ aux2 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n
 aux3 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
 
 aux5 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+
 
 
 res <- bind_rows(

@@ -11,6 +11,9 @@ library(writexl)
 library(pheatmap)
 library(UpSetR)
 library(sjlabelled)
+library(svyVGAM)
+
+
 
 eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
 eh18 = read_sav("database/EH/EH2018/EH2018_Discriminacion.sav")
@@ -81,12 +84,71 @@ edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
 # Cantidad de servicios disponibles en relación con 
 # la cantidad y tipo de necesidades de la población
 
+
 edsa %>% filter(hs03_0033==1)
 
+## se estan filtrando a las personas que han tenido un problema de salud en los ultimos 3 meses, 
+## ademas de que se esta excluyendo a las personas que reportan que no fueron a un centro de salud debido a que no lo
+## consideraban grave o que no saben por que no fueron
 
-aux1 = edsa %>% filter(hs03_0033 == 1, hs03_0035_V == 1, hs03_0039_A==1 | hs03_0039_B==1 |
-                         hs03_0039_E == 1 | hs03_0039_G == 1 | hs03_0039_H == 1 |
-                         hs03_0039_I == 1 | hs03_0039_M == 1 | hs03_0039_X_cod %in% c('R','U','V'))
+
+aux1 <- edsa %>% 
+  filter(hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
+  mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) 
+
+aux1 = aux1 %>% mutate(subsseguridads = rowSums(across(hs03_0035_H:hs03_0035_O) == 1,na.rm = TRUE))
+
+aux1 = aux1 %>% mutate(subprivado = rowSums(across(hs03_0035_P:hs03_0035_Q) == 1,na.rm = TRUE))
+
+aux1 = aux1 %>% mutate(otros = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
+
+aux1 = aux1 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
+
+aux1$hs03_0039_X_cod %>% table()
+
+
+
+aux2 = edsa %>% 
+  filter(hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
+  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE)) 
+
+aux2 = aux2 %>% mutate(informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
+
+aux2 = aux2 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
+
+
+aux2 %>% group_by(formal, informal , nofue) %>% count()
+
+aux2 = aux2 %>% filter(!(formal==0 & informal==0 & nofue==0)) %>% 
+  mutate(servicio = ifelse(formal>=1,"disponible",ifelse(informal>=1,"alternativa","no fue")))
+
+aux2 %>% group_by( servicio) %>% count()
+
+aux2 %>% group_by(hs01_0003, servicio) %>% count() %>% group_by(hs01_0003) %>% summarise(n = n /sum(n))
+
+design = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factorexph,
+  data = (aux2)
+)
+
+aux2$hs01_0004a
+aux2$hs01_0003
+aux2$hs01_0010
+aux2$afilsegsal
+aux2$tipohogar  
+aux2$area
+aux2$idiomaninez
+aux2$niv_ed_g
+
+modelo <- svy_vglm(servicio ~ hs01_0004a + hs01_0003 + hs01_0010 + afilsegsal +area+idiomaninez+
+                     niv_ed_g,
+                   design = design,
+                   family = multinomial())
+
+summary(modelo)
+
 
 
 
@@ -136,6 +198,7 @@ edsa %>% filter(hs03_0033 == 1, hs03_0039_J==1)
 
 ## The acceptability dimension will be constructed using a summated rating scale derived from binary response variables
 
+
 aux1 = edsa %>% filter(hs03_0033 == 1) %>% select(hs03_0037_A:hs03_0037_I)
 aux1 %>% get_label()
 
@@ -155,12 +218,16 @@ edsa %>% filter(hs03_0033 == 1 , is.na(hs03_0035_V)) %>%
   select(hs03_0037_A:hs03_0037_I) %>% nrow()
 
 
-edsa %>% 
-  filter(hs03_0033 == 1,
-         !is.na(hs03_0037_A),
-         !is.na(hs03_0037_H),
-         hs03_0037_A != 999) %>% 
-  select(hs03_0037_A:hs03_0037_I) %>% summary()
+aux3 = edsa %>% filter(hs03_0033 == 1) %>% 
+  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1,na.rm = TRUE)) %>% filter(formal >= 1)
+
+
+
+
+
+aux3 = aux3 %>% filter(!(hs03_0037_A==999)) 
+
+#############################################################
 
 edsa_accept <- edsa %>% 
   filter(hs03_0033 == 1,
@@ -193,6 +260,36 @@ plot(edsa_accept$aestudio, edsa_accept$acceptability_std)
 hist(edsa_accept$acceptability_std, breaks = 8)
 
 
+aux3 = aux3 %>% mutate(acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.rm = TRUE)) %>% 
+  mutate(acept= )
 
 
+############################################################################################
 
+
+aux3 = edsa %>% 
+  mutate(
+    acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.rm = TRUE),
+    acept_std = (acept - min(acept, na.rm = TRUE)) /
+      (max(acept, na.rm = TRUE) - min(acept, na.rm = TRUE)),
+    acept_std = 1 - acept_std
+  )
+
+aux3 %>% group_by(hs01_0010) %>% summarise(mean(acept_std))
+
+aux3
+  
+design2 = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factorexph,
+  data = (aux3)
+)
+
+modelo <- svyglm(
+  acept_std ~ factor(hs01_0010) + hs01_0004a + hs01_0003 + factor(afilsegsal),
+  design = design2,
+  family = gaussian()
+)
+summary(modelo)  
+  

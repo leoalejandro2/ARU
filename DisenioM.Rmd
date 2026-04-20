@@ -1,0 +1,59 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-04-20"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(dplyr)
+library(writexl)
+
+
+```
+
+
+
+
+
+```{r}
+#bd1 = Persona_CPV.2024 %>% filter(idep==8 | idep==5)
+#save(bd1,file = "censoBP2024.RData")
+load("censoBP2024.RData")
+bd1 %>% group_by(idep,imun,iprov) %>% count() %>% View()
+
+```
+
+tematica: descripcion de las posibles secciones 
+potenciales tematicas que podria tener el cuestionario ademas de el tiempo ppor persona
+
+Disenio estadistico/estrategia de muestreo
+
+n=tamanio de muestra
+
+estrategia de muestreo
+
+marco muestral
+
+manzanos 2024
+
+disenio muestral
+
+tema operativo 
+
+estimar edsa: 
+
+Revicion de literatura:
+protocolo para identificacion de estas poblaciones de mujeres de 15 a 49 anios
+
+
+
+1 tematica, propuesta de secciones
+2 calcular los indicadores en relacion con la edsa
+3 revicion de la literatura en estudios similares para identificar a mujeres de 15 a 49 anios
+que esta casadas, embarazadas o an tenido un parto hace 5 a 2 anios
+
+
+
+
