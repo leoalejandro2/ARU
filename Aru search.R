@@ -97,6 +97,11 @@ aux1 = eh24dis %>%
 
 
 
+
+
+
+
+
 table(aux1$discriminacion)/nrow(aux1)
 table(aux1$s09a_01a)/nrow(aux1)
 table(aux1$s09a_01b)/nrow(aux1)
@@ -111,7 +116,7 @@ table(aux1$s09a_01j)/nrow(aux1)
 table(aux1$s09a_01k)/nrow(aux1)
 table(aux1$s09a_01l)/nrow(aux1)
 
-eh24dis %>% group_by(s09a_01a) %>% summarise(total = n()/nrow(eh24dis))
+aux1 %>% group_by(discriminacion) %>% summarise(n = sum(ponderador)) %>% mutate(n / sum(n))
 
 mean(eh24dis$ponderador)
 
