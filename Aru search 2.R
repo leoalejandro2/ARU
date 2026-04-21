@@ -91,10 +91,14 @@ edsa %>% filter(hs03_0033==1)
 ## ademas de que se esta excluyendo a las personas que reportan que no fueron a un centro de salud debido a que no lo
 ## consideraban grave o que no saben por que no fueron
 
+## la disponibilidad se mide al 
+
 
 aux1 <- edsa %>% 
   filter(hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
-  mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) 
+  mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) %>% 
+  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
+
 
 aux1 = aux1 %>% mutate(subsseguridads = rowSums(across(hs03_0035_H:hs03_0035_O) == 1,na.rm = TRUE))
 
@@ -104,13 +108,17 @@ aux1 = aux1 %>% mutate(otros = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_00
 
 aux1 = aux1 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
 
-aux1$hs03_0039_X_cod %>% table()
+edsa %>% select(hs03_0034_A:hs03_0035_Q) %>% get_label()
 
-
+## se excluyen a las personas menores a 16 anios
+# personas que no buscaron algun centro de salud por que no lo consideraban grave
+## solo a las personas que reportan haber persentado algun problema de salud
+## Personas que no saben a donde los llevaron
 
 aux2 = edsa %>% 
-  filter(hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
-  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE)) 
+  filter(hs01_0004a>=16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
+  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE)) %>% 
+  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
 
 aux2 = aux2 %>% mutate(informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
 
@@ -119,39 +127,141 @@ aux2 = aux2 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
 
 aux2 %>% group_by(formal, informal , nofue) %>% count()
 
-aux2 = aux2 %>% filter(!(formal==0 & informal==0 & nofue==0)) %>% 
-  mutate(servicio = ifelse(formal>=1,"disponible",ifelse(informal>=1,"alternativa","no fue")))
+aux2 = aux2 %>% 
+  filter(!(formal==0 & informal==0 & nofue==0)) %>% 
+  mutate(servicio = case_when(
+    formal >= 1 ~ "Acceso a servicios de salud",
+    informal >= 1 ~ "Atención alternativa",
+    TRUE ~ "No accedió a atención"
+  ),
+  accesoS = case_when(
+    formal >= 1 ~ "Acceso a servicios de salud",
+    TRUE ~ "No accedió a atención"
+  ),
+  atenAltenativa = case_when(
+    informal >= 1 ~ "Busco atencion alternativa",
+    TRUE ~ "No busco atencion alternativa"
+  ))
+
+aux2 = aux2 %>% 
+  filter(!(formal==0 & informal==0 & nofue==0)) %>% 
+  mutate(
+    
+    # Variable 3 categorías
+    servicio = labelled(
+      case_when(
+        formal >= 1 ~ 1,
+        informal >= 1 ~ 2,
+        TRUE ~ 3
+      ),
+      labels = c(
+        "Acceso a servicios de salud" = 1,
+        "Atención alternativa" = 2,
+        "No accedió a atención" = 3
+      )
+    ),
+    
+    # Variable binaria acceso formal
+    accesoS = labelled(
+      case_when(
+        formal >= 1 ~ 1,
+        TRUE ~ 0
+      ),
+      labels = c(
+        "No accedió a atención" = 0,
+        "Acceso a servicios de salud" = 1
+      )
+    ),
+    
+    # Variable binaria atención alternativa
+    atenAltenativa = labelled(
+      case_when(
+        informal >= 1 ~ 1,
+        TRUE ~ 0
+      ),
+      labels = c(
+        "No buscó atención alternativa" = 0,
+        "Buscó atención alternativa" = 1
+      )
+    )
+    
+  )
+
+
+aux2 %>% filter(hs01_0004a>=16) 
+
 
 aux2 %>% group_by( servicio) %>% count()
 
-aux2 %>% group_by(hs01_0003, servicio) %>% count() %>% group_by(hs01_0003) %>% summarise(n = n /sum(n))
+aux2 %>% group_by(accesoS) %>% count()
+
+aux3 = aux2 %>% 
+  mutate(
+    area = as_label(area),
+    atenAltenativa = as_label(atenAltenativa),
+    sex = as_label(hs01_0003),
+    niv_edu = ifelse(niv_ed_g==99,NA,niv_ed_g),
+    niv_edu = as_label(labelled(niv_edu, labels = c(
+      "Ninguno" = 0,
+      "Primaria" = 1,
+      "Secundaria" = 2,
+      "Superior" = 3
+    ))),
+    seguro = as_label(labelled(case_when(
+      afilsegsal == 1 ~ 1,
+      afilsegsal == 2 ~ 2,
+      afilsegsal == 3 ~ 3,
+      afilsegsal %in% c(4,5,6) ~ 4
+    ),labels = c(
+      "SUS" = 1,
+      "Cajas de Salud" = 2,
+      "Seguro Privado" = 3,
+      "Sin seguro/ No sabe" =4
+   ))),
+   qriquez = as_label(qriqueza)
+  )
+  
+aux3$qriqueza
+
+aux2 %>% get_label()
+
+aux2$hs01_0004a #edad
+
+
+aux2 %>% group_by(hs01_0010) %>% summarise(mean(accesoS))
+
+aux2 %>% group_by(hs01_0010, servicio) %>% summarise(n = n()) %>% mutate(n = n/sum(n))
+
+
+aux2 %>% get_label()
+
+aux2$niv_ed_g_o
+aux2$hs01_0008 
+aux2$hs01_0010
+table(aux2$afilsegsal)
+
 
 design = svydesign(
   ids = ~upm,
   strata = ~estrato,
   weights = ~factorexph,
-  data = (aux2)
+  data = (aux3)
 )
 
-aux2$hs01_0004a
-aux2$hs01_0003
-aux2$hs01_0010
-aux2$afilsegsal
-aux2$tipohogar  
-aux2$area
-aux2$idiomaninez
-aux2$niv_ed_g
-
-modelo <- svy_vglm(servicio ~ hs01_0004a + hs01_0003 + hs01_0010 + afilsegsal +area+idiomaninez+
-                     niv_ed_g,
+modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
                    design = design,
                    family = multinomial())
+
+modelo <- svyglm(accesoS ~ area + atenAltenativa + sex + niv_edu + seguro + qriquez,
+                   design = design,
+                   family = quasibinomial())
 
 summary(modelo)
 
 
-
-
+edsav = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
+edsav %>% get_label()
+edsav$qriqueza %>% table()
 # -------------------------------
 # Accesibilidad
 # -------------------------------
@@ -200,12 +310,13 @@ edsa %>% filter(hs03_0033 == 1, hs03_0039_J==1)
 
 
 aux1 = edsa %>% filter(hs03_0033 == 1) %>% select(hs03_0037_A:hs03_0037_I)
-aux1 %>% get_label()
+edsa %>% get_label()
 
-aux1 %>% 
+edsa %>% get_label()
 
-aux1 %>% mutate(across(hs03_0037_A:hs03_0037_I, 
-                       ))
+
+
+aux1 %>% mutate(across(hs03_0037_A:hs03_0037_I))
 
 edsa %>% select(hs03_0037_A:hs03_0037_I)
 edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
@@ -265,9 +376,10 @@ aux3 = aux3 %>% mutate(acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.
 
 
 ############################################################################################
+edsa %>% 
 
-
-aux3 = edsa %>% 
+aux3 = edsa %>% mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) %>% 
+  filter(subPublico>=1) %>% 
   mutate(
     acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.rm = TRUE),
     acept_std = (acept - min(acept, na.rm = TRUE)) /
@@ -277,7 +389,7 @@ aux3 = edsa %>%
 
 aux3 %>% group_by(hs01_0010) %>% summarise(mean(acept_std))
 
-aux3
+aux3$acept_std %>% hist()
   
 design2 = svydesign(
   ids = ~upm,
@@ -285,6 +397,10 @@ design2 = svydesign(
   weights = ~factorexph,
   data = (aux3)
 )
+
+aaa= as_survey(design2)
+
+aaa %>% group_by(hs01_0010) %>% summarise(survey_mean(acept_std))
 
 modelo <- svyglm(
   acept_std ~ factor(hs01_0010) + hs01_0004a + hs01_0003 + factor(afilsegsal),

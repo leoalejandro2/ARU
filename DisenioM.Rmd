@@ -13,9 +13,15 @@ library(writexl)
 
 ```
 
+planter bien los modelos
 
+que factores hacen que una persona asistan a un servicio de salud
 
+dentro de las personas que asisten a algun centro de salud hay alguna diferencia en la aceptabilidad de pertenecer a algun pueblo originario
 
+Centro de Salud
+
+psa
 
 ```{r}
 #bd1 = Persona_CPV.2024 %>% filter(idep==8 | idep==5)
