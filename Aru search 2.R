@@ -218,7 +218,8 @@ aux3 = aux2 %>%
       "Seguro Privado" = 3,
       "Sin seguro/ No sabe" =4
    ))),
-   qriquez = as_label(qriqueza)
+   qriquez = as_label(qriqueza),
+   puebloind = as_label(hs01_0010) 
   )
   
 aux3$qriqueza
@@ -239,7 +240,7 @@ aux2$niv_ed_g_o
 aux2$hs01_0008 
 aux2$hs01_0010
 table(aux2$afilsegsal)
-
+aux2$hs01_0010 
 
 design = svydesign(
   ids = ~upm,
@@ -252,7 +253,7 @@ modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
                    design = design,
                    family = multinomial())
 
-modelo <- svyglm(accesoS ~ area + atenAltenativa + sex + niv_edu + seguro + qriquez,
+modelo <- svyglm(accesoS ~ area + atenAltenativa + puebloind + sex + niv_edu + seguro + qriquez,
                    design = design,
                    family = quasibinomial())
 
