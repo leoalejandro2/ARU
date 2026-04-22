@@ -15,6 +15,7 @@ library(svyVGAM)
 
 
 
+
 eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
 eh18 = read_sav("database/EH/EH2018/EH2018_Discriminacion.sav")
 
@@ -38,6 +39,9 @@ edsa %>% get_label()
   
 get_label(edsa)
 #establecimiento o servicio de salud
+
+edsa$hs03_0033
+edsa$hs03_0035_A
 edsa %>% filter(hs03_0033==1,
                 hs03_0035_A==1,   # puesto de salud
                 hs03_0035_B==1,   # centro de salud ambulatorio
@@ -77,38 +81,12 @@ edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>
 
 # -------------------------------
 # Disponibilidad
-# -------------------------------
-edsa %>% select(hs03_0035_A:hs03_0035_Z) %>% get_label()
-edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
-
-# Cantidad de servicios disponibles en relación con 
-# la cantidad y tipo de necesidades de la población
-
-
-edsa %>% filter(hs03_0033==1)
+# ---------------------------
 
 ## se estan filtrando a las personas que han tenido un problema de salud en los ultimos 3 meses, 
 ## ademas de que se esta excluyendo a las personas que reportan que no fueron a un centro de salud debido a que no lo
 ## consideraban grave o que no saben por que no fueron
 
-## la disponibilidad se mide al 
-
-
-aux1 <- edsa %>% 
-  filter(hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
-  mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) %>% 
-  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
-
-
-aux1 = aux1 %>% mutate(subsseguridads = rowSums(across(hs03_0035_H:hs03_0035_O) == 1,na.rm = TRUE))
-
-aux1 = aux1 %>% mutate(subprivado = rowSums(across(hs03_0035_P:hs03_0035_Q) == 1,na.rm = TRUE))
-
-aux1 = aux1 %>% mutate(otros = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
-
-aux1 = aux1 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
-
-edsa %>% select(hs03_0034_A:hs03_0035_Q) %>% get_label()
 
 ## se excluyen a las personas menores a 16 anios
 # personas que no buscaron algun centro de salud por que no lo consideraban grave
@@ -116,9 +94,13 @@ edsa %>% select(hs03_0034_A:hs03_0035_Q) %>% get_label()
 ## Personas que no saben a donde los llevaron
 
 aux2 = edsa %>% 
-  filter(hs01_0004a>=16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z)) %>% 
+  filter(hs01_0004a>=16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z),
+         hs01_0010!=3) %>% 
   mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE)) %>% 
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
+##########################################################################################
+##########################################################################################
+
 
 aux2 = aux2 %>% mutate(informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
 
@@ -142,6 +124,54 @@ aux2 = aux2 %>%
     informal >= 1 ~ "Busco atencion alternativa",
     TRUE ~ "No busco atencion alternativa"
   ))
+######################################################################################
+designdesc = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factorexph,
+  data = (aux2)
+)
+
+bd1 = as_survey(designdesc)
+
+tabla <- bd1 %>% 
+  group_by(accesoS) %>% 
+  summarise(n = survey_total()) %>% 
+  mutate(porc = n/sum(n)*100)
+
+
+ggplot(tabla, aes(x = accesoS, y = porc, fill = accesoS)) +
+  geom_col(width = 0.5, color = "white") +
+  geom_text(aes(label = paste0(round(porc,1), "%")),
+            vjust = -0.5,
+            size = 4) +
+  scale_fill_manual(values = c(
+    "#D94801",  # naranja fuerte
+    "#F16913",  # naranja medio
+    "#FDAE6B"   # naranja claro
+  )) +
+  labs(
+    x = "",
+    y = "Porcentaje",
+    title = "Acceso a servicios de salud",
+    fill = "Servicios de salud"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    text = element_text(size = 12),
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  ) +
+  ylim(0,100)
+
+
+
+
+
+######################################################################################
+
+
 
 aux2 = aux2 %>% 
   filter(!(formal==0 & informal==0 & nofue==0)) %>% 
@@ -219,12 +249,14 @@ aux3 = aux2 %>%
       "Sin seguro/ No sabe" =4
    ))),
    qriquez = as_label(qriqueza),
-   puebloind = as_label(hs01_0010) 
+   puebloind = as_label(hs01_0010),
+   edad = hs01_0004a
   )
   
+aux3$seguro
 aux3$qriqueza
 
-aux2 %>% get_label()
+
 
 aux2$hs01_0004a #edad
 
@@ -233,15 +265,6 @@ aux2 %>% group_by(hs01_0010) %>% summarise(mean(accesoS))
 
 aux2 %>% group_by(hs01_0010, servicio) %>% summarise(n = n()) %>% mutate(n = n/sum(n))
 
-
-aux2 %>% get_label()
-
-aux2$niv_ed_g_o
-aux2$hs01_0008 
-aux2$hs01_0010
-table(aux2$afilsegsal)
-aux2$hs01_0010 
-
 design = svydesign(
   ids = ~upm,
   strata = ~estrato,
@@ -249,16 +272,56 @@ design = svydesign(
   data = (aux3)
 )
 
-modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
-                   design = design,
-                   family = multinomial())
-
-modelo <- svyglm(accesoS ~ area + atenAltenativa + puebloind + sex + niv_edu + seguro + qriquez,
+#modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
+#                   design = design,
+#                   family = multinomial())
+#
+modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez,
                    design = design,
                    family = quasibinomial())
 
 summary(modelo)
 
+library(modelsummary)
+
+modelsummary(
+  modelo,
+  output = "latex",
+  statistic = c("std.error", "p.value"),
+  stars = TRUE,
+  title = "Factores asociados al acceso a servicios de salud"
+)
+
+library(stargazer)
+
+# Generar el código LaTeX
+stargazer(modelo, 
+          type = "latex", 
+          title = "Resultados del Modelo de Acceso a Salud",
+          dep.var.labels = "Acceso a Salud (accesoS)",
+          covariate.labels = c("Área (Urbana/Rural)", "Edad", "Pueblo Indígena", 
+                               "Sexo", "Seguro Médico", "Quintil de Riqueza"),
+          digits = 3,
+          header = FALSE,
+          label = "tab:modelo_salud")
+
+
+
+
+modelo_null <- svyglm(
+  accesoS ~ 1,
+  design = design,
+  family = quasibinomial()
+)
+
+# Pseudo R2 McFadden
+pseudo_r2 <- 1 - (logLik(modelo) / logLik(modelo_null))
+
+pseudo_r2
+
+pseudo_r2_adj <- 1 - ((logLik(modelo) - length(coef(modelo))) / logLik(modelo_null))
+
+pseudo_r2_adj
 
 edsav = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsav %>% get_label()
@@ -309,88 +372,90 @@ edsa %>% filter(hs03_0033 == 1, hs03_0039_J==1)
 
 ## The acceptability dimension will be constructed using a summated rating scale derived from binary response variables
 
-
-aux1 = edsa %>% filter(hs03_0033 == 1) %>% select(hs03_0037_A:hs03_0037_I)
-edsa %>% get_label()
-
-edsa %>% get_label()
-
-
-
-aux1 %>% mutate(across(hs03_0037_A:hs03_0037_I))
-
-edsa %>% select(hs03_0037_A:hs03_0037_I)
-edsa %>% select(hs03_0039_A:hs03_0039_Z) %>% get_label()
-
-# Relación entre las actitudes de los usuarios y las 
-# características del personal de salud (idioma, trato,
-# respeto cultural, etc.)
-
-edsa %>% filter(hs03_0033 == 1 , is.na(hs03_0035_V)) %>% 
-  select(hs03_0037_A:hs03_0037_I) %>% nrow()
-
-
-aux3 = edsa %>% filter(hs03_0033 == 1) %>% 
-  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1,na.rm = TRUE)) %>% filter(formal >= 1)
-
-
-
-
-
-aux3 = aux3 %>% filter(!(hs03_0037_A==999)) 
-
-#############################################################
-
-edsa_accept <- edsa %>% 
-  filter(hs03_0033 == 1,
-         !is.na(hs03_0037_A),
-         !is.na(hs03_0037_H),
-         hs03_0037_A != 999) %>% 
-  mutate(across(hs03_0037_A:hs03_0037_I,
-                ~ case_when(
-                  . == 1 ~ 1,
-                  . == 2 ~ 0
-                ))) %>% 
-  mutate(acceptability = rowSums(across(hs03_0037_A:hs03_0037_I), 
-                                 na.rm = TRUE))
-
-edsa_accept <- edsa_accept %>% 
-  mutate(acceptability_std = 
-           (1 - ((acceptability - min(acceptability, na.rm = TRUE)) /
-           (max(acceptability, na.rm = TRUE) - 
-              min(acceptability, na.rm = TRUE)))))
-
-
-
-edsa_accept %>% get_label()
-edsa_accept %>% group_by(hs01_0010) %>% summarise(mean(acceptability_std))
-edsa_accept$aestudio
-
-
-plot(edsa_accept$aestudio, edsa_accept$acceptability_std)
-
-hist(edsa_accept$acceptability_std, breaks = 8)
-
-
-aux3 = aux3 %>% mutate(acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.rm = TRUE)) %>% 
-  mutate(acept= )
-
-
 ############################################################################################
-edsa %>% 
+edsa %>% get_label()
 
 aux3 = edsa %>% mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1, na.rm = TRUE)) %>% 
-  filter(subPublico>=1) %>% 
+  filter(subPublico>=1, hs01_0004a >= 16, hs01_0010!=3) %>% 
   mutate(
     acept = rowSums(across(hs03_0037_A:hs03_0037_I) == 1, na.rm = TRUE),
     acept_std = (acept - min(acept, na.rm = TRUE)) /
       (max(acept, na.rm = TRUE) - min(acept, na.rm = TRUE)),
-    acept_std = 1 - acept_std
+    acept_std = 1 - acept_std,
+    Establecimiento = as_label(labelled(case_when(
+      
+      hs03_0035_E == 1 | hs03_0035_F == 1 | hs03_0035_G == 1 ~ 3,
+      hs03_0035_P == 1 | hs03_0035_Q == 1 ~ 4,
+      hs03_0035_H == 1 | hs03_0035_I == 1 | hs03_0035_J == 1 | hs03_0035_K == 1 |
+      hs03_0035_L == 1 | hs03_0035_M == 1 | hs03_0035_N == 1 | hs03_0035_O == 1 ~ 2,
+      hs03_0035_A == 1 | hs03_0035_B == 1 | hs03_0035_C == 1 | hs03_0035_D == 1 ~ 1
+    ),labels = c(
+      "Primer nivel público"=1,"Cajas de salud"=2,
+      "Hospital público"=3,"Privado"=4)
+    )),
+    PrimerNivel = ifelse(hs03_0035_A == 1 |  # puesto de salud
+                           hs03_0035_B == 1 |  # centro ambulatorio
+                           hs03_0035_C == 1 |  # centro con internación
+                           hs03_0035_D == 1,1),
+    HospitalSTEsp = ifelse(hs03_0035_E == 1 |  # segundo nivel
+                             hs03_0035_F == 1 |  # tercer nivel
+                             hs03_0035_G == 1,1,0),
+    CajasS = ifelse(hs03_0035_H == 1 |
+                      hs03_0035_I == 1 |
+                      hs03_0035_J == 1 |
+                      hs03_0035_K == 1 |
+                      hs03_0035_L == 1 |
+                      hs03_0035_M == 1 |
+                      hs03_0035_N == 1 |
+                      hs03_0035_O == 1,1,0),
+    Privado = ifelse(hs03_0035_P == 1 | hs03_0035_Q == 1,1,0),
+    PrimerNivel = !is.na(PrimerNivel),
+    HospitalSTEsp = !is.na(HospitalSTEsp),
+    CajasS = ! is.na(CajasS),
+    Privado = !is.na(Privado),
+    edad = hs01_0004a,
+    seguro = as_label(labelled(case_when(
+      afilsegsal == 1 ~ 1,
+      afilsegsal == 2 ~ 2,
+      afilsegsal == 3 ~ 3,
+      afilsegsal %in% c(4,5,6) ~ 4
+    ),labels = c(
+      "SUS" = 1,
+      "Cajas de Salud" = 2,
+      "Seguro Privado" = 3,
+      "Sin seguro/ No sabe" =4
+    ))),
+    area = as_label(area),
+    puebloind = as_label(hs01_0010),
+    idiomaN = as_label(idiomaninez),
+    genero = as_label(hs01_0003) 
   )
 
-aux3 %>% group_by(hs01_0010) %>% summarise(mean(acept_std))
+aux3$hs01_0003
+edsa %>% get_label()
 
-aux3$acept_std %>% hist()
+edsa$idiomaninez
+edsa %>% get_label()
+edsa %>% pull(hs01_0008 )
+
+aux3 %>% pull(acept_std) %>% hist()
+ggplot(aux3, aes(x = acept_std)) +
+  geom_histogram(
+    fill = "#F16913", 
+    color = "white", 
+    bins = 9,
+    alpha = 0.9
+  ) +
+  labs(
+    title = "Distribución del índice de aceptabilidad",
+    x = "Índice de aceptabilidad",
+    y = "Frecuencia"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
   
 design2 = svydesign(
   ids = ~upm,
@@ -399,14 +464,32 @@ design2 = svydesign(
   data = (aux3)
 )
 
-aaa= as_survey(design2)
-
-aaa %>% group_by(hs01_0010) %>% summarise(survey_mean(acept_std))
+aux3$Establecimiento
+edsa %>% get_label()
 
 modelo <- svyglm(
-  acept_std ~ factor(hs01_0010) + hs01_0004a + hs01_0003 + factor(afilsegsal),
+  acept_std ~  puebloind + idiomaN + edad + Establecimiento + seguro + area ,
   design = design2,
   family = gaussian()
 )
 summary(modelo)  
+
+modelo_null <- svyglm(
+  acept_std ~ 1,
+  design = design2,
+  family = gaussian()
+)
+
+# Pseudo R2 McFadden
+pseudo_r2 <- 1 - (logLik(modelo) / logLik(modelo_null))
+
+pseudo_r2
+
+pseudo_r2_adj <- 1 - ((logLik(modelo) - length(coef(modelo))) / logLik(modelo_null))
+
+pseudo_r2_adj
+
+aaa= as_survey(design2)
+
+aaa %>% group_by(hs01_0010) %>% summarise(survey_mean(acept_std))
   
