@@ -93,21 +93,32 @@ edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>
 ## solo a las personas que reportan haber persentado algun problema de salud
 ## Personas que no saben a donde los llevaron
 
+edsa$hs03_0034_X_cod %>% table()
+
+edsa$hs03_0034_X %>% table()
+
+
+
 aux2 = edsa %>% 
-  filter(hs01_0004a>=16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z),
+  filter(hs01_0004a >= 16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z),
          hs01_0010!=3) %>% 
-  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE)) %>% 
+  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE),
+         informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE),
+         nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE)) %>% 
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
 ##########################################################################################
 ##########################################################################################
 
+edsa %>% filter(hs01_0007>0) %>% group_by(folio,hs01_0007) %>% count() %>% mutate(cuid = labelled(
+  case_when(
+    n>0 & n<90 ~ 1
+  ),
+  labels = c("cuidador" = 1)
+)) 
 
-aux2 = aux2 %>% mutate(informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE))
-
-aux2 = aux2 %>% mutate(nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE))
 
 
-aux2 %>% group_by(formal, informal , nofue) %>% count()
+aux2 %>% group_by(formal, informal , nofue) %>% count() %>% summarise()
 
 aux2 = aux2 %>% 
   filter(!(formal==0 & informal==0 & nofue==0)) %>% 
@@ -282,6 +293,8 @@ modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez,
 
 summary(modelo)
 
+
+
 library(modelsummary)
 
 modelsummary(
@@ -384,7 +397,7 @@ aux3 = edsa %>% mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1
     acept_std = 1 - acept_std,
     Establecimiento = as_label(labelled(case_when(
       
-      hs03_0035_E == 1 | hs03_0035_F == 1 | hs03_0035_G == 1 ~ 3,
+      hs03_0035_E == 1 | hs03_0035_F == 1 | hs03_0035_G == 1 ~ 1,
       hs03_0035_P == 1 | hs03_0035_Q == 1 ~ 4,
       hs03_0035_H == 1 | hs03_0035_I == 1 | hs03_0035_J == 1 | hs03_0035_K == 1 |
       hs03_0035_L == 1 | hs03_0035_M == 1 | hs03_0035_N == 1 | hs03_0035_O == 1 ~ 2,
@@ -431,6 +444,52 @@ aux3 = edsa %>% mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1
     genero = as_label(hs01_0003) 
   )
 
+
+vars <- aux3 %>% 
+  select(hs03_0034_A:hs03_0034_T, hs03_0034_X) %>% 
+  mutate(across(everything(), ~ ifelse(. == 1, 1, 0)))
+
+
+pca <- prcomp(vars, scale. = TRUE)
+
+# Extraer 5 componentes
+scores <- as.data.frame(pca$x[,1:5])
+
+names(scores) <- paste0("comp", 1:5)
+
+aux3 <- bind_cols(aux3, scores)
+
+aux3 <- aux3 %>% 
+  rowwise() %>% 
+  mutate(
+    categoria_acp = which.max(c_across(comp1:comp5))
+  ) %>% 
+  ungroup()
+
+aux3 <- aux3 %>% 
+  mutate(
+    categoria_acp = factor(categoria_acp,
+                           levels = 1:5,
+                           labels = c(
+                             "Problemas de salud comunes",
+                             "Problemas respiratorios y sensoriales",
+                             "Lesiones y violencia",
+                             "Enfermedades transmisibles",
+                             "Salud mental"
+                           )
+    )
+  )
+
+
+aux3$categoria_acp
+
+aux3 %>% count(categoria_acp)
+
+round(pca$rotation[,1:5], 2)
+
+
+
+
 aux3$hs01_0003
 edsa %>% get_label()
 
@@ -468,7 +527,7 @@ aux3$Establecimiento
 edsa %>% get_label()
 
 modelo <- svyglm(
-  acept_std ~  puebloind + idiomaN + edad + Establecimiento + seguro + area ,
+  acept_std ~  puebloind + idiomaN + edad + I(edad^2) + seguro + area + categoria_acp + Establecimiento,
   design = design2,
   family = gaussian()
 )
