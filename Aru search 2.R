@@ -78,7 +78,6 @@ edsa %>% get_label()
 
 edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>% 
   group_by(hs01_0010) %>% mutate(n = n / sum(n))
-
 # -------------------------------
 # Disponibilidad
 # ---------------------------
@@ -93,18 +92,181 @@ edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>
 ## solo a las personas que reportan haber persentado algun problema de salud
 ## Personas que no saben a donde los llevaron
 
+<<<<<<< HEAD
 edsa$hs03_0034_X_cod %>% table()
 
 edsa$hs03_0034_X %>% table()
 
 
 
+=======
+
+edsa %>% get_label()
+edsa %>% get_label()
+edsa %>% select(hs03_0034_A:hs03_0034_X_cod) %>% get_label()
+  
+edsa$hs03_0034_X_cod %>% table()
+
+edsa %>% filter(hs03_0034_X_cod=="D64") %>% pull(hs03_0034_X_cod) %>% get_labels()
+
+edsa %>% mutate(
+  infecciosaP = labelled(case_when(
+    hs03_0034_X_cod %in% c("A01", "A02", "A06", "B00", "B01", "B02", "B03", "B17") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  SangreEnf = labelled(case_when(
+    hs03_0034_X_cod %in% c("D36", "D48", "D64", "D75") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  metabolismoE = labelled(case_when(
+    hs03_0034_X_cod %in% c("E14", "E34", "E66", "E80") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  mental = labelled(case_when(
+    hs03_0034_X_cod %in% c("F03","F20" ,"F48", "F50") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaN = labelled(case_when(
+    hs03_0034_X_cod %in% c("G40", "G43", "G44", "G51", "G64") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaC = labelled(case_when(
+    hs03_0034_X_cod %in% c("I00", "I10", "I52", "I70", "I72", "I82", "I84", "I86", "I89", "I95") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaR = labelled(case_when(
+    hs03_0034_X_cod %in% c("J00", "J06", "J11", "J18", "J30", "J34", "J40", "J45", "J98") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaD = labelled(case_when(
+    hs03_0034_X_cod %in% c("K36", "K38", "K46", "K65", "K76", "K82", "K92") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaM = labelled(case_when(
+    hs03_0034_X_cod %in% c("M10", "M13", "M19", "M25", "M51", "M79", "M85", "M86", "M99") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  sistemaG = labelled(case_when(
+    hs03_0034_X_cod %in% c("N39", "N42", "N50", "N64", "N94", "N95") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  embarazo = labelled(case_when(
+    hs03_0034_X_cod %in% c("O06", "O14", "O83") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  NnormalR = labelled(case_when(
+    hs03_0034_X_cod %in% c("Q02", "R04", "R05", "R07", "R11", "R41", "R45", "R50", "R52", "R58", "R73") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  lesiones = labelled(case_when(
+    hs03_0034_X_cod %in% c("T07", "T30", "W54", "W57", "W64", "Y98") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  atencion = labelled(case_when(
+    hs03_0034_X_cod %in% c("Z13", "Z21", "Z30", "Z34", "Z35", "Z39", "Z51", "Z88") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  )
+)
+  
+edsa %>% mutate(
+  
+  # Enfermedades infecciosas
+  infecciosas = labelled(case_when(
+    hs03_0034_X_cod %in% c("A01", "A02", "A06", "B00", "B01", "B02", "B03", "B17") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  # enfermedades de la sangre, tumores o trastornos endocrinos/metabólicos
+  Sangre_metabolico = labelled(case_when(
+    hs03_0034_X_cod %in% c("D36", "D48", "D64", "D75",
+                           "E14", "E34", "E66", "E80") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  mental = labelled(case_when(
+    hs03_0034_X_cod %in% c("F03","F20" ,"F48", "F50") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  ## problema de salud correspondiente a enfermedades crónicas de distintos sistemas del organismo
+  sistemaN = labelled(case_when(
+    hs03_0034_X_cod %in% c("G40", "G43", "G44", "G51", "G64",
+                           "I00", "I10", "I52", "I70", "I72", "I82", "I84", "I86", "I89", "I95",
+                           "J00", "J06", "J11", "J18", "J30", "J34", "J40", "J45", "J98",
+                           "K36", "K38", "K46", "K65", "K76", "K82", "K92",
+                           "M10", "M13", "M19", "M25", "M51", "M79", "M85", "M86", "M99",
+                           "N39", "N42", "N50", "N64", "N94", "N95") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  NnormalR = labelled(case_when(
+    hs03_0034_X_cod %in% c("Q02", "R04", "R05", "R07", "R11", "R41", "R45", "R50", "R52", "R58", "R73") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  lesiones = labelled(case_when(
+    hs03_0034_X_cod %in% c("T07", "T30", "W54", "W57", "W64", "Y98") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  ),
+  atencionE = labelled(case_when(
+    hs03_0034_X_cod %in% c("O06", "O14", "O83",
+                           "Z13", "Z21", "Z30", "Z34", "Z35", "Z39", "Z51", "Z88") ~ 1,
+    TRUE ~ 0 ),
+    labels = c("Si" = 1,
+               "No" = 0)
+  )
+)
+
+
+
+
+bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
+  mutate(nro=hs01_0007)
+
+
+>>>>>>> eabfd6275b2caf4aabd81ab682f701fd74b94062
 aux2 = edsa %>% 
   filter(hs01_0004a >= 16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z),
          hs01_0010!=3) %>% 
   mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE),
          informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE),
          nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE)) %>% 
+<<<<<<< HEAD
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento"))
 ##########################################################################################
 ##########################################################################################
@@ -119,6 +281,15 @@ edsa %>% filter(hs01_0007>0) %>% group_by(folio,hs01_0007) %>% count() %>% mutat
 
 
 aux2 %>% group_by(formal, informal , nofue) %>% count() %>% summarise()
+=======
+  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) %>% 
+  left_join(bd1, by = c("folio","nro"))
+
+aux2$n
+##########################################################################################
+##########################################################################################
+aux2 %>% group_by(formal, informal , nofue) %>% count()
+>>>>>>> eabfd6275b2caf4aabd81ab682f701fd74b94062
 
 aux2 = aux2 %>% 
   filter(!(formal==0 & informal==0 & nofue==0)) %>% 
@@ -224,11 +395,120 @@ aux2 = aux2 %>%
         "No buscó atención alternativa" = 0,
         "Buscó atención alternativa" = 1
       )
+    ),
+    cuidador = labelled(
+      case_when(
+        n>0 ~ 1,
+        TRUE ~ 0
+      ), labels = c(
+        "cuidador" = 1,
+        "no cuidador" = 0
+      )
+    ),
+    tipo_salud = case_when(
+      
+      # 1. Lesiones (alta prioridad)
+      hs03_0034_D == 1 | hs03_0034_E == 1 ~ "Lesiones",
+      
+      # 2. Enfermedades infecciosas
+      hs03_0034_A == 1 | hs03_0034_B == 1 | hs03_0034_C == 1 |
+        hs03_0034_K == 1 | hs03_0034_L == 1 | hs03_0034_M == 1 |
+        hs03_0034_N == 1 | hs03_0034_P == 1 | hs03_0034_Q == 1 |
+        hs03_0034_S == 1 ~ "Infecciosas",
+      
+      # 3. Crónicas / no transmisibles
+      hs03_0034_G == 1 | hs03_0034_H == 1 | hs03_0034_I == 1 |
+        hs03_0034_J == 1 | hs03_0034_R == 1 | hs03_0034_T == 1 ~ "Cronicas",
+      
+      # 4. Otros
+      hs03_0034_F == 1 | hs03_0034_O == 1 | hs03_0034_X == 1 ~ "Otros",
+      
+      TRUE ~ NA_character_
+    ),
+    inf_A = ifelse(hs03_0034_A==1 | hs03_0034_B==1 | hs03_0034_C==1 |
+                     hs03_0034_K==1 | hs03_0034_L==1 | hs03_0034_M==1 |
+                     hs03_0034_N==1 | hs03_0034_P==1 | hs03_0034_Q==1 |
+                     hs03_0034_S==1, 1, 0),
+    
+    lesion_A = ifelse(hs03_0034_D==1 | hs03_0034_E==1, 1, 0),
+    
+    mental_A = ifelse(hs03_0034_T==1, 1, 0),
+    
+    cronica_A = ifelse(hs03_0034_G==1 | hs03_0034_H==1 | hs03_0034_I==1 |
+                         hs03_0034_J==1 | hs03_0034_R==1, 1, 0),
+    icd = substr(hs03_0034_X_cod, 1, 1),
+    
+    inf_X = ifelse(icd %in% c("A","B"), 1, 0),
+    lesion_X = ifelse(icd %in% c("S","T","V","W","Y"), 1, 0),
+    mental_X = ifelse(icd == "F", 1, 0),
+    cronica_X = ifelse(icd %in% c("I","E","G","K","N","H"), 1, 0),
+    
+    infecciosa = ifelse(inf_A==1 | inf_X==1, 1, 0),
+    lesion     = ifelse(lesion_A==1 | lesion_X==1, 1, 0),
+    mental     = ifelse(mental_A==1 | mental_X==1, 1, 0),
+    cronica    = ifelse(cronica_A==1 | cronica_X==1, 1, 0),
+    
+    
+    # Enfermedades infecciosas
+    infecciosas = labelled(case_when(
+      hs03_0034_X_cod %in% c("A01", "A02", "A06", "B00", "B01", "B02", "B03", "B17") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0) #
+    ),
+    # enfermedades de la sangre, tumores o trastornos endocrinos/metabólicos
+    Sangre_metabolico = labelled(case_when(
+      hs03_0034_X_cod %in% c("D36", "D48", "D64", "D75",
+                             "E14", "E34", "E66", "E80") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
+    ),
+    mental = labelled(case_when(
+      hs03_0034_X_cod %in% c("F03","F20" ,"F48", "F50") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
+    ),
+    ## problema de salud correspondiente a enfermedades crónicas de distintos sistemas del organismo
+    sistemaN = labelled(case_when(
+      hs03_0034_X_cod %in% c("G40", "G43", "G44", "G51", "G64",
+                             "I00", "I10", "I52", "I70", "I72", "I82", "I84", "I86", "I89", "I95",
+                             "J00", "J06", "J11", "J18", "J30", "J34", "J40", "J45", "J98",
+                             "K36", "K38", "K46", "K65", "K76", "K82", "K92",
+                             "M10", "M13", "M19", "M25", "M51", "M79", "M85", "M86", "M99",
+                             "N39", "N42", "N50", "N64", "N94", "N95") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
+    ),
+    NnormalR = labelled(case_when(
+      hs03_0034_X_cod %in% c("Q02", "R04", "R05", "R07", "R11", "R41", "R45", "R50", "R52", "R58", "R73") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
+    ),
+    lesiones = labelled(case_when(
+      hs03_0034_X_cod %in% c("T07", "T30", "W54", "W57", "W64", "Y98") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
+    ),
+    atencionE = labelled(case_when(
+      hs03_0034_X_cod %in% c("O06", "O14", "O83",
+                             "Z13", "Z21", "Z30", "Z34", "Z35", "Z39", "Z51", "Z88") ~ 1,
+      TRUE ~ 0 ),
+      labels = c("Si" = 1,
+                 "No" = 0)
     )
     
   )
 
+aux2$hs03_0034_X_cod %>% table()
 
+aux2 %>% group_by(infecciosa,lesion,mental,cronica) %>% count()
+
+aux2$cuidador
 aux2 %>% filter(hs01_0004a>=16) 
 
 
@@ -261,16 +541,13 @@ aux3 = aux2 %>%
    ))),
    qriquez = as_label(qriqueza),
    puebloind = as_label(hs01_0010),
-   edad = hs01_0004a
+   edad = hs01_0004a,
+   cuidador = as_label(cuidador),
+   idiomaN = as_label(idiomaninez),
+   thogar = as_label(tipohogar),
+   educa = as_label(niv_ed_g),
+   reg = as_label(region)
   )
-  
-aux3$seguro
-aux3$qriqueza
-
-
-
-aux2$hs01_0004a #edad
-
 
 aux2 %>% group_by(hs01_0010) %>% summarise(mean(accesoS))
 
@@ -287,12 +564,15 @@ design = svydesign(
 #                   design = design,
 #                   family = multinomial())
 #
-modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez,
+modelo <- svyglm(accesoS ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + 
+                    atenAltenativa +
+                   infecciosas + Sangre_metabolico + mental + sistemaN + NnormalR +lesiones +atencionE,
                    design = design,
                    family = quasibinomial())
 
 summary(modelo)
 
+<<<<<<< HEAD
 
 
 library(modelsummary)
@@ -317,9 +597,28 @@ stargazer(modelo,
           digits = 3,
           header = FALSE,
           label = "tab:modelo_salud")
+=======
+library(pscl)
+library(car)
+library(pROC)
+>>>>>>> eabfd6275b2caf4aabd81ab682f701fd74b94062
 
 
 
+regTermTest(modelo, ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + aestudio + 
+              thogar + educa + reg +infecciosas + Sangre_metabolico + mental + sistemaN + NnormalR +lesiones +atencionE)
+
+aux3$pred <- predict(modelo, type = "response")
+aux3$pred_bin <- ifelse(aux3$pred > 0.5, 1, 0)
+
+table(aux3$pred_bin, aux3$accesoS)
+
+vif(modelo)
+pR2(modelo)
+
+roc <- roc(aux3$accesoS, aux3$pred)
+plot(roc)
+auc(roc)
 
 modelo_null <- svyglm(
   accesoS ~ 1,
@@ -441,9 +740,53 @@ aux3 = edsa %>% mutate(subPublico = rowSums(across(hs03_0035_A:hs03_0035_G) == 1
     area = as_label(area),
     puebloind = as_label(hs01_0010),
     idiomaN = as_label(idiomaninez),
-    genero = as_label(hs01_0003) 
+    genero = as_label(hs01_0003),
+    tipo_salud = case_when(
+      
+      # 1. Lesiones (alta prioridad)
+      hs03_0034_D == 1 | hs03_0034_E == 1 ~ "Lesiones",
+      
+      # 2. Enfermedades infecciosas
+      hs03_0034_A == 1 | hs03_0034_B == 1 | hs03_0034_C == 1 |
+        hs03_0034_K == 1 | hs03_0034_L == 1 | hs03_0034_M == 1 |
+        hs03_0034_N == 1 | hs03_0034_P == 1 | hs03_0034_Q == 1 |
+        hs03_0034_S == 1 ~ "Infecciosas",
+      
+      # 3. Crónicas / no transmisibles
+      hs03_0034_G == 1 | hs03_0034_H == 1 | hs03_0034_I == 1 |
+        hs03_0034_J == 1 | hs03_0034_R == 1 | hs03_0034_T == 1 ~ "Cronicas",
+      
+      # 4. Otros
+      hs03_0034_F == 1 | hs03_0034_O == 1 | hs03_0034_X == 1 ~ "Otros",
+      
+      TRUE ~ NA_character_
+    ),
+    inf_A = ifelse(hs03_0034_A==1 | hs03_0034_B==1 | hs03_0034_C==1 |
+                     hs03_0034_K==1 | hs03_0034_L==1 | hs03_0034_M==1 |
+                     hs03_0034_N==1 | hs03_0034_P==1 | hs03_0034_Q==1 |
+                     hs03_0034_S==1, 1, 0),
+    
+    lesion_A = ifelse(hs03_0034_D==1 | hs03_0034_E==1, 1, 0),
+    
+    mental_A = ifelse(hs03_0034_T==1, 1, 0),
+    
+    cronica_A = ifelse(hs03_0034_G==1 | hs03_0034_H==1 | hs03_0034_I==1 |
+                         hs03_0034_J==1 | hs03_0034_R==1, 1, 0),
+    icd = substr(hs03_0034_X_cod, 1, 1),
+    
+    inf_X = ifelse(icd %in% c("A","B"), 1, 0),
+    lesion_X = ifelse(icd %in% c("S","T","V","W","Y"), 1, 0),
+    mental_X = ifelse(icd == "F", 1, 0),
+    cronica_X = ifelse(icd %in% c("I","E","G","K","N","H"), 1, 0),
+    
+    infecciosa = ifelse(inf_A==1 | inf_X==1, 1, 0),
+    lesion     = ifelse(lesion_A==1 | lesion_X==1, 1, 0),
+    mental     = ifelse(mental_A==1 | mental_X==1, 1, 0),
+    cronica    = ifelse(cronica_A==1 | cronica_X==1, 1, 0)
+    
   )
 
+<<<<<<< HEAD
 
 vars <- aux3 %>% 
   select(hs03_0034_A:hs03_0034_T, hs03_0034_X) %>% 
@@ -498,6 +841,8 @@ edsa %>% get_label()
 edsa %>% pull(hs01_0008 )
 
 aux3 %>% pull(acept_std) %>% hist()
+=======
+>>>>>>> eabfd6275b2caf4aabd81ab682f701fd74b94062
 ggplot(aux3, aes(x = acept_std)) +
   geom_histogram(
     fill = "#F16913", 
@@ -523,11 +868,13 @@ design2 = svydesign(
   data = (aux3)
 )
 
-aux3$Establecimiento
-edsa %>% get_label()
-
 modelo <- svyglm(
+<<<<<<< HEAD
   acept_std ~  puebloind + idiomaN + edad + I(edad^2) + seguro + area + categoria_acp + Establecimiento,
+=======
+  acept_std ~  puebloind + idiomaN + edad + Establecimiento + seguro + area +
+    infecciosa +lesion + mental +cronica,
+>>>>>>> eabfd6275b2caf4aabd81ab682f701fd74b94062
   design = design2,
   family = gaussian()
 )
