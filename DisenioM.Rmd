@@ -24,10 +24,67 @@ Centro de Salud
 psa
 
 ```{r}
+library(dplyr)
+library(stringr)
 #bd1 = Persona_CPV.2024 %>% filter(idep==8 | idep==5)
 #save(bd1,file = "censoBP2024.RData")
 load("censoBP2024.RData")
 bd1 %>% group_by(idep,imun,iprov) %>% count() %>% View()
+
+bd1 %>% names()
+
+# POTOSI
+bd1 %>% filter(idep==5, iprov == 1, imun == 1) %>%  group_by(i00) %>% count() %>% arrange(n) %>% View()
+
+
+# TRINIDAD
+bd1 %>% filter(idep==8, iprov == 1, imun == 1) %>% group_by(i00) %>%  count() %>% View()
+
+# RIVERALTA
+bd1 %>% filter(idep==8, iprov == 2, imun == 1) %>%  count()
+
+
+
+bd1 %>% filter(str_detect(as.character(i00), "03825060536-D"))
+bd1 %>% names()
+
+bd1 %>% filter(idep==5) %>% pull(i00) 
+
+bd1 %>% filter(idep==8) %>% pull(i00)
+
+
+library(readxl)
+bd1 = read_excel("C:/Users/LEO ALEJANDRO/Desktop/MPotosi/AGUA DULCE.xlsx", 
+    range = "B11:E16")
+
+bd1
+######################################################################################
+
+library(readxl)
+library(dplyr)
+library(purrr)
+
+# 1. Definir la ruta de la carpeta
+ruta_carpeta <- "C:/Users/LEO ALEJANDRO/Downloads/riberalta (1)/riberalta/"
+
+# 2. Listar todos los archivos Excel en esa carpeta
+archivos <- list.files(path = ruta_carpeta, pattern = "*.xlsx", full.names = TRUE)
+
+# 3. Leer el rango B11:E16 de cada archivo y unirlos en una sola tabla
+bd_total <- archivos %>%
+  set_names(basename(.)) %>% # Mantiene el nombre del archivo para saber de qué comunidad es
+  map_df(~read_excel(.x, range = "B11:E16"), .id = "Comunidad")
+
+?map_df()
+
+# Ver el resultado
+View(bd_total)
+library(writexl)
+
+bd_total
+bd_total %>% filter(`Grupo de edad`== "Total") %>% write_xlsx("prueba4.xlsx")
+
+
 
 ```
 

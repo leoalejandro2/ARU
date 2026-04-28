@@ -12,7 +12,10 @@ library(pheatmap)
 library(UpSetR)
 library(sjlabelled)
 library(svyVGAM)
-
+library(modelsummary)
+library(pscl)
+library(car)
+library(pROC)
 
 
 
@@ -561,8 +564,16 @@ aux3 = aux2 %>%
    idiomaN = as_label(idiomaninez),
    thogar = as_label(tipohogar),
    educa = as_label(niv_ed_g),
-   reg = as_label(region)
+   reg = as_label(region),
+   naturalista2022 = as_label(hs03_0030),
+   csalud2022 = as_label(hs03_0031)
   )
+
+aux2 %>% get_label()
+
+aux2$hs03_0030
+aux2$hs03_0031 %>% table()
+
 
 aux2 %>% group_by(hs01_0010) %>% summarise(mean(accesoS))
 
@@ -579,23 +590,29 @@ design = svydesign(
 #                   design = design,
 #                   family = multinomial())
 
-modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez + idiomaN + 
-                   # atenAltenativa +
+
+  
+
+modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + idiomaN + seguro + qriquez  + 
+                   naturalista2022 + csalud2022 + atenAltenativa +
                    infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + sintomas_f + atencion_f,
                    design = design,
                    family = quasibinomial())
 
 summary(modelo)
-library(modelsummary)
-library(pscl)
-library(car)
-library(pROC)
+
+library(stargazer)
+library(broom)
 
 
 
 
-regTermTest(modelo, ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + niv_edu +
-              # atenAltenativa +
+stargazer(modelo, type='latex', summary=TRUE)
+
+
+
+regTermTesmodeloregTermTest(modelo, ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + niv_edu +
+              atenAltenativa +
               infecciosas + Sangre_metabolico + mental + sistemaN + NnormalR +lesiones +atencionE + 
               inf_A + lesion_A + mental_A + cronica_A)
 
