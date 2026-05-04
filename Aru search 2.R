@@ -593,7 +593,7 @@ design = svydesign(
 
   
 
-modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + idiomaN + seguro + qriquez  + 
+modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  + 
                    naturalista2022 + csalud2022 + atenAltenativa +
                    infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + sintomas_f + atencion_f,
                    design = design,
@@ -998,7 +998,7 @@ design2 = svydesign(
 )
 
 modelo <- svyglm(
-  acept_std ~  idiomaN + edad + Establecimiento + seguro + area +
+  acept_std ~  idiomaN + edad + Establecimiento +
     infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + sintomas_f + atencion_f,
 
   design = design2,
@@ -1018,7 +1018,7 @@ modelo_null <- svyglm(
 
 # Pseudo R2 McFadden
 
-modelo_lineal <- lm(acept_std ~  idiomaN + edad + Establecimiento + seguro + area +
+modelo_lineal <- lm(acept_std ~  idiomaN + edad + seguro + area +
                       infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + 
                       sintomas_f + atencion_f, data = aux3)
 

@@ -65,7 +65,7 @@ library(dplyr)
 library(purrr)
 
 # 1. Definir la ruta de la carpeta
-ruta_carpeta <- "C:/Users/LEO ALEJANDRO/Downloads/riberalta (1)/riberalta/"
+ruta_carpeta <- "C:/Users/LEO ALEJANDRO/Desktop/MPotosi/"
 
 # 2. Listar todos los archivos Excel en esa carpeta
 archivos <- list.files(path = ruta_carpeta, pattern = "*.xlsx", full.names = TRUE)
@@ -84,6 +84,87 @@ library(writexl)
 bd_total
 bd_total %>% filter(`Grupo de edad`== "Total") %>% write_xlsx("prueba4.xlsx")
 
+
+
+```
+
+
+```{r}
+# Instalar si no lo tienes: install.packages("tidygeocoder")
+library(tidygeocoder)
+library(dplyr)
+
+# Supongamos que bd_total tiene una columna llamada "Comunidad"
+# Limpiamos el nombre (quitando ".xlsx") para buscarlo
+
+mun_potosi = c('AGUA DULCE', 'AYLLU ALPACANI', 'AYLLU CALA CALA', 'AYLLU CANDELARIA', 'AYLLU PARANTACA', 'CACHI TAMBO', 'CALAMARCA', 'CALLAPAMPA', 'CALLURI', 'CENTENO', 'CHALLAJTIRI', 'CHALLAJTIRI BAJA', 'CHALVIRI ALTA', 'CHALVIRI BAJA', 'CHAQUILLA ALTA', 'CHAQUILLA B', 'CHILIMOCKO', 'CHIUTARA', 'CHULLCHUCANI', 'CKOLLPATIRA', 'COMUNIDAD SAMASA BAJA', 'CONCEPCION', 'GALEON', 'GRAN PEÑA', 'HUANUNI', 'HUARI HUARI', 'HUARI HUARI PALCA', 'INCA HUASI', 'IRUPAMPA CHICA', 'IRUPAMPA GRANDE', 'JATUN AYLLU PATI PATI', 'JAYAQUILA', 'JESUS VALLE', 'KALLA WACA', 'KARACHIPAMPA', 'LA ESQUINA', 'LACKA CAIMA', 'LACKACHACA', 'LECHE HUIRA', 'MANQUIRI', 'MAYU CANTO', 'MIRAFLORES', 'MONDRAGON', 'OLLERIAS', 'PALCA MAYU', 'PARANTURI', 'PUCARA', 'QUILA QUILA', 'SAMASA ALTA', 'SAN ILDELFONSO', 'SAN ROQUE', 'SANTIAGO DE OCKORURO', 'SUMATALA', 'SUNTUR HUASI', 'TARAPAYA', 'TARUTA', 'TEJA TAMBO', 'THAMARI', 'TRAPICHE', 'TUCU TUCU', 'TURICAYA CHICA', 'TURICAYA GRANDE', 'VILLA CONCEPCION', 'VILLACOLLO')
+
+
+mun_trinidad = c('CASARABE', 'COPACABANA DEL RIO IBARE', 'EL CERRITO', 'HACIENDA/FINCA/ESTANCIA', 'IBIATO', 'LOMA SUAREZ', 'MANGALITO', 'MATADERO FIGRORIFICO EL ALAMO', 'PATA DE AGUILA', 'PUERTO BALLIVIAN', 'PUERTO VARADOR', 'SAN JUAN DE AGUAS DULCE', 'TRINIDAD', 'VILLA LAGUNA LA BOMBA', 'VILLA VICTORIA')
+
+mun_riberalta = c('12 DE OCTUBRE','23 DE MARZO','26 DE OCTUBRE','27 DE MAYO','5 DE AGOSTO','7 DE JULIO','AGUA CLARA','ALTA GRACIA','ALTO IVON','ANTOFAGASTA','AVAROA (EDUARDO)','BELLA FLOR','BERLIN','BOLIVAR','BRILLANTE','BRILLANTE SANTA ROSA DEL BIATA','BUEN DESTINO','BUEN RETIRO','CACHUELITA','CALIFORNIA','CAMPO CENTRAL','CANDELARIA DEL BENI','CANDELARIA DEL IVON','CARMEN ALTO','CARNAVALES','CONSUELO DEL ROSARIO','COSTA RICA','DESVELO','EL HONDO','EL ROSARIO','EL TRIANGULO','FLOR DE OCTUBRE','FORTALEZA','HACIENDA/FINCA/ESTANCIA','HAMBURGO','LA ESPERANZA','LA PALCA','LA SABANA','LAGO BUENA VISTA','LAGO SAN JOSE','LAS COLONIAS ANGELES II','LAS LIMAS','LAS MERCEDES','LAS PALMERAS','LAS PETAS','LOS ANGELES','LOS TUBOS','MATRIMONO','MEDIO MONTE','MIRAFLORES','MOTACUSAL','NAZARETH','NUCLEO','NUEVA FIRMEZA','NUEVA UNION','NUEVO MOXOS-TOKIO','PALESTINA','PALMA FLOR','PALMIRA','PALMIRA DEL IVON','PARAISO','PEÑA AMARILLA','POPECHI','POZA NEGRA','PUERTO BARRERO','PUERTO CHACOBO','PUERTO LATA','PUERTO ROMAN','PUERTO TUJURE','RECREO','RIBERALTA','RIBERALTA DISPERSO','SAN ANTONIO','SAN ARIEL','SAN CRISTOBAL','SAN FRANCISCO','SAN JOSE BAJO','SAN JUAN','SAN JUAN DE URUCU','SAN JUAN KM. 42','SAN LORENZO DE PAMPA','SAN RAMON','SAN VICENTE','SANTA AMALIA','SANTA ELENA','SANTA FE','SANTA MARIA','SANTA RITA','SANTA RITA (ANEXO BERLIN)','SANTA ROSA DEL FLORIDA BUEN DESTINO','SANTA ROSA DEL IVON','SANTA TERESITA','SANTUARIO','SEDAN','SIETE ALMENDROS','SIGLO XX','TABLERO','TODO SANTOS','TRES BOCAS','TRIUNFO','TUMICHUCUA','VICTORIA','VILLA ALBA','VILLA COTOCA','WARNES')
+
+comunidades_lista <- paste0("Comunidad ", mun_potosi, ", Municipio de Potosi, Bolivia")
+
+# Crear una tabla única con todas las comunidades
+bd_comunidades <- bind_rows(
+  data.frame(comunidad = mun_potosi, municipio = "Potosi"),
+  data.frame(comunidad = mun_trinidad, municipio = "Trinidad"),
+  data.frame(comunidad = mun_riberalta, municipio = "Riberalta")
+)
+
+# Crear la columna de búsqueda con el formato correcto
+bd_comunidades <- bd_comunidades  %>% 
+  mutate(nombre_busqueda = paste0(comunidad, ", Municipio de ", municipio, ", Bolivia"))
+
+coordenadas_finales <- bd_comunidades %>%
+  geocode(address = nombre_busqueda, method = 'osm')
+
+# Ver resultados
+coordenadas_finales %>% View()
+
+coordenadas_finales %>% write_xlsx("prueba5.xlsx")
+
+coordenadas_finales %>% View()
+
+# Instala las librerías si no las tienes
+# install.packages(c("ggplot2", "sf", "rnaturalearth", "rnaturalearthdata"))
+
+library(ggplot2)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+# Obtener el mapa de Bolivia (nivel nacional)
+bolivia <- ne_countries(scale = "medium", country = "bolivia", returnclass = "sf")
+
+# (Opcional) Si quieres los departamentos
+departamentos <- ne_states(country = "bolivia", returnclass = "sf")
+# Obtener latitud y longitud desde OpenStreetMap (gratis)
+
+# Convertimos tu data frame en un objeto espacial (sf)
+puntos_sf <- coordenadas_finales %>%
+  filter(!is.na(lat) & !is.na(long)) %>% # Eliminamos los que no se encontraron
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+
+ggplot() +
+  # Dibujar los departamentos de Bolivia
+  geom_sf(data = departamentos, fill = "antiquewhite", color = "gray70") +
+  # Dibujar los puntos de las comunidades
+  geom_sf(data = puntos_sf, aes(color = municipio), size = 2, alpha = 0.7) +
+  # Configuración estética
+  theme_minimal() +
+  labs(
+    title = "Ubicación de Comunidades Analizadas",
+    subtitle = "Municipios: Potosí, Trinidad y Riberalta",
+    x = "Longitud",
+    y = "Latitud",
+    color = "Municipio"
+  ) +
+  theme(
+    legend.position = "bottom",
+    panel.grid.major = element_line(color = "white")
+  )
 
 
 ```

@@ -156,6 +156,12 @@ eh22 = read_sav("database/EH/EH2022/EH2022_Discriminacion.sav")
 eh21 = read_sav("database/EH/EH2021/EH2021_Discriminacion.sav")
 eh19 = read_sav("database/EH/EH2019/EH2019_Discriminacion.sav")
 
+eh241 = read_sav("database/EH/EH2024/EH2024_Persona.sav")
+eh231 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
+eh221 = read_sav("database/EH/EH2022/EH2022_Persona.sav")
+eh211 = read_sav("database/EH/EH2021/EH2021_Persona.sav")
+eh191 = read_sav("database/EH/EH2019/EH2019_Persona.sav")
+
 eh24 %>% get_label()
 
 eh24 %>% group_by(s09a_01k,s09a_01h) %>% summarise(n = sum(ponderador)) %>% pull(n) %>% sum()
@@ -169,13 +175,13 @@ eh24 %>% filter(s09a_02==2) %>% group_by(s09a_05_6) %>% summarise(n = sum(ponder
 
 
 
-aux1 = eh21 %>% mutate(dis = ifelse(rowSums(across(s10a_01a:s10a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
-aux2 = eh22 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
-aux3 = eh23 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux1 = eh21 %>% left_join(eh211, by = c("folio","nro")) %>% mutate(dis = ifelse(rowSums(across(s10a_01a:s10a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux2 = eh22 %>% left_join(eh221, by = c("folio","nro")) %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux3 = eh23 %>% left_join(eh231, by = c("folio","nro")) %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
 
 
-aux4 = eh19 %>% mutate(dis = ifelse(rowSums(across(s12a_01a:s12a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
-aux5 = eh24 %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux4 = eh19 %>% left_join(eh191, by = c("folio","nro")) %>% mutate(dis = ifelse(rowSums(across(s12a_01a:s12a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
+aux5 = eh24 %>% left_join(eh241, by = c("folio","nro")) %>% mutate(dis = ifelse(rowSums(across(s09a_01a:s09a_01l, ~ . %in% c(1,3)),na.rm = TRUE)>0,"Si","No"))
 
 
 
@@ -191,16 +197,11 @@ aux6 %>% group_by(dis, rac) %>% summarise(n=sum(ponderador))  %>%
 
 
 
-aux4 %>% group_by(dis) %>% summarise(n = sum(Ponderador)) %>% mutate(n = n/sum(n)*100)
-
-aux1 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
-
-aux2 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
-
-aux3 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
-
-aux5 %>% group_by(dis) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
-
+aux4 %>% filter(dis=="Si") %>% group_by(as_label(s02a_02)) %>% summarise(n = sum(Ponderador)) %>% mutate(n = n/sum(n)*100)
+aux1 %>% filter(dis=="Si") %>% group_by(as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+aux2 %>% filter(dis=="Si") %>% group_by(as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+aux3 %>% filter(dis=="Si") %>% group_by(as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
+aux5 %>% filter(dis=="Si") %>% group_by(as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(n = n/sum(n)*100)
 
 
 res <- bind_rows(
@@ -213,9 +214,22 @@ res <- bind_rows(
   group_by(base) %>% 
   mutate(porcentaje = n/sum(n)*100)
 
-res
 
-#write_xlsx(res,"tab.xlsx")
+res2 <- bind_rows(
+  aux4 %>% filter(dis=="Si") %>% group_by(genero = as_label(s02a_02)) %>% summarise(n = sum(Ponderador)) %>% mutate(base = "2019"),
+  aux1 %>% filter(dis=="Si") %>% group_by(genero = as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2021"),
+  aux2 %>% filter(dis=="Si") %>% group_by(genero = as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2022"),
+  aux3 %>% filter(dis=="Si") %>% group_by(genero = as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2023"),
+  aux5 %>% filter(dis=="Si") %>% group_by(genero = as_label(s01a_02)) %>% summarise(n = sum(ponderador)) %>% mutate(base = "2024")
+) %>% 
+  group_by(base) %>% 
+  mutate(porcentaje = n/sum(n)*100)
+res2
+
+write_xlsx(res2,"tab2.xlsx")
+
+
+
 AUX5 %>% group_by()
 aux5$s09a_02
 
@@ -297,6 +311,51 @@ pheatmap(matriz_porcentaje,
          number_format = "%.1f%%", 
          color = colorRampPalette(c("white", "#fee0d2", "#de2d26"))(100),
          main = "Interseccionalidad: % de solapamiento entre motivos")
+
+
+library(tidyverse)
+
+# Creamos la tabla tal cual la tienes en Excel
+datos_resumen <- data.frame(
+  Anio = c(2019, 2021, 2022, 2023, 2024),
+  Total_Si = c(0.1066, 0.1264, 0.1644, 0.1496, 0.1487),
+  Hombre = c(0.5024, 0.4071, 0.4119, 0.4345, 0.4478),
+  Mujer = c(0.4975, 0.5928, 0.5880, 0.5654, 0.5521)
+)
+
+# Multiplicamos por el Total_Si para saber el porcentaje real de hombres/mujeres que sufrieron discriminación
+# Esto es necesario porque tus columnas Hombre/Mujer suman 1 (son proporciones del grupo "Sí")
+datos_grafico <- datos_resumen %>%
+  mutate(
+    Hombres_Disc = Hombre * Total_Si * 100,
+    Mujeres_Disc = Mujer * Total_Si * 100
+  ) %>%
+  select(Anio, Hombres_Disc, Mujeres_Disc) %>%
+  # Pasamos a formato largo para ggplot
+  pivot_longer(cols = c(Hombres_Disc, Mujeres_Disc), 
+               names_to = "Genero", 
+               values_to = "Porcentaje")
+
+
+ggplot(datos_grafico, aes(x = as.factor(Anio), y = Porcentaje, fill = Genero)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Porcentaje)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.5) +
+  scale_fill_manual(values = c("Hombres_Disc" = "#3498db", "Mujeres_Disc" = "#e74c3c"),
+                    labels = c("Hombre", "Mujer")) +
+  theme_minimal() +
+  labs(
+    title = "Prevalencia de Discriminación por Género (2019-2024)",
+    subtitle = "Basado en Encuesta de Hogares - Bolivia",
+    x = "Año",
+    y = "Porcentaje (%)",
+    fill = "Género"
+  )
+
+
+
+
+
 
 
 

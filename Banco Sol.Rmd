@@ -2,6 +2,8 @@
 title: "Untitled"
 output: pdf_document
 date: "2026-04-28"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -29,6 +31,9 @@ nro1 = c("+51 944 110 083", "+591 75838538", "+591 70540300",
 "+591 77278678", "+591 61185884", "+591 60551728", 
 "+591 78832770", "+591 68026294", "+591 79509624")
 
+df1 = data.frame(numero=nro1, lugar = "La Paz", descripcion = "LPZ- Nivel Inicial Con Sala de Niños  BancoSol Taller Presencial Herramientas Tecnológicas G2 2025")
+
+df1
 
 ```
 
@@ -56,6 +61,10 @@ nro2 = c("+591 61153611", "+51 944 110 083", "+591 79660751",
 "+591 73923094", "+591 65131197", "+591 60668548", 
 "+591 72555111", "+591 78945098", "+591 75829515", 
 "+591 76702825", "+591 62574015")
+
+df2 = data.frame(numero=nro2, lugar = "Zoom", descripcion = "Taller \"Herramientas Tecnológicas para Potenciar las Ventas \" \"G1\" CapacitaRSE Mujer (BancoSol) 2025")
+
+df2
 ```
 
 Taller "Herramientas Tecnológicas para Potenciar las Ventas " "G2" CapacitaRSE Mujer (BancoSol) 2025
@@ -78,6 +87,8 @@ nro3=c("+51 944 110 083", "+591 68440772", "+591 75389266",
 "+591 75681746", "+591 74053519", "+591 69809978", 
 "+591 69471471", "+591 70482418", "+591 60014079", 
 "+591 70940242", "+591 65553948")
+
+df3 = data.frame(numero=nro3, lugar = "Zoom", descripcion = "Taller \"Herramientas Tecnológicas para Potenciar las Ventas \" \"G2\" CapacitaRSE Mujer (BancoSol) 2025")
 ```
 
 
@@ -101,6 +112,10 @@ nro4=c("+51 944 110 083", "+591 75372222", "+591 75611044",
 "+591 74961102", "+591 77649791", "+591 77075912", 
 "+591 79855756", "+591 78008847", "+591 72633534", 
 "+591 70245111", "+591 78572233", "+591 73627479") 
+
+df4 = data.frame(numero=nro4, lugar = "Santa Cruz", descripcion = "SCZ- Nivel Inicial BancoSol Taller Presencial Con Sala de Niños Herramientas Tecnológicas  G2 2025")
+
+
 
 ```
 
@@ -128,6 +143,8 @@ nro5=c("+591 61153611", "+51 944 110 083", "+591 60139807",
 "+591 76767745", "+591 73509882", "+591 77545134", 
 "+591 69717725", "+591 73299278", "+591 72567888", 
 "+591 71161614")
+
+df5 = data.frame(numero=nro5, lugar = "La Paz", descripcion = "La Paz- Nivel Intermedio con Cuidado Infantil G2 BancoSol Taller  Herramientas Tecnológicas 2025")
 ```
 
 
@@ -159,6 +176,8 @@ nro6 = c("+51 944 110 083", "+591 70101946", "+591 70681072",
 "+591 60141639", "+591 62448964", "+591 74076041", 
 "+591 73719716", "+591 76588439", "+591 69872232", 
 "+591 73280320", "+591 60116407")
+
+df6 = data.frame(numero=nro6, lugar = "La Paz", descripcion = "La Paz- Nivel Intermedio BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 
@@ -182,6 +201,8 @@ nro7 = c("+51 944 110 083", "+591 79646752", "+591 68097543",
 "+591 68095028", "+591 69818061", "+591 78783883", 
 "+591 78811680", "+591 73272847", "+591 77439808", 
 "+591 76592038", "+591 77217343", "+591 76253352")
+
+df7 = data.frame(numero=nro7, lugar = "El Alto", descripcion = "EL ALTO- Nivel Intermedio BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 
@@ -213,6 +234,8 @@ nro8 = c("+51 944 110 083", "+591 69702358", "+591 65623888",
 "+591 62197914", "+591 79599199", "+591 72510704", 
 "+591 78572233", "+591 78895701", "+591 77343962", 
 "+591 76707097", "+591 60172647", "+591 71558073")
+
+df8 = data.frame(numero=nro8, lugar = "Zoom", descripcion = "Taller \"Herramientas Tecnológicas para Potenciar las Ventas \"  Intermedio G2 CapacitaRSE Mujer 2025")
 ```
 
 
@@ -236,6 +259,8 @@ nro9 = c("+591 75644820", "+51 944 110 083", "+591 77745319",
 "+591 71456681", "+591 76672190", "+591 74923125", 
 "+591 79351520", "+591 70627028", "+591 75321392", 
 "+591 60838285")
+
+df9 = data.frame(numero=nro9, lugar = "Santa Cruz", descripcion = "SCZ- Nivel Inicial BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 EL ALTO G2- Nivel Intermedio con sala de niños BancoSol Taller Presencial Herramientas Tecnológica
@@ -259,6 +284,9 @@ nro10 = c("+591 65615409", "+51 944 110 083", "+591 75293831",
 "+591 73518788", "+591 60162274", "+591 78823555", 
 "+591 68057428", "+591 75811522", "+591 69365632", 
 "+591 72071696", "+591 63190450", "+591 60692414")
+
+df10 = data.frame(numero=nro10, lugar = "El Alto", descripcion = "EL ALTO G2- Nivel Intermedio con sala de niños BancoSol Taller Presencial Herramientas Tecnológica")
+
 ```
 
 
@@ -283,6 +311,8 @@ nro11 = c("+51 944 110 083", "+591 75389266", "+591 77623900",
 "+591 78554333", "+591 78071601", "+591 72669701", 
 "+591 79351520", "+591 79026726", "+591 67293991", 
 "+591 72109711")
+
+df11 = data.frame(numero=nro11, lugar = "Santa Cruz", descripcion = "SCZ- Nivel Intermedio G2 con cuidado Infantil Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 LPZ- Nivel Inicial BancoSol Taller Presencial Herramientas Tecnológicas 2025
@@ -309,6 +339,8 @@ nro12 = c("+51 944 110 083", "+591 68174949", "+591 63173045",
 "+591 78794432", "+591 65102389", "+591 63140477", 
 "+591 68026294", "+591 68043874", "+591 62446093", 
 "+591 68152118", "+591 73013563")
+
+df12 = data.frame(numero=nro12, lugar = "La paz", descripcion = "LPZ- Nivel Inicial BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 
@@ -327,6 +359,8 @@ nro13 = c("+51 944 110 083", "+591 77540094", "+591 70577043",
 "+591 70506669", "+591 79577797", "+591 76572365", 
 "+591 60614638", "+591 63091571", "+591 61156400", 
 "+591 76253352")
+
+df13 = data.frame(numero=nro13, lugar = "El Alto", descripcion = "EL ALTO- Nivel Inicial BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 Taller "Herramientas Tecnológicas para Potenciar las Ventas "  Intermedio G1 CapacitaRSE Mujer 2025
@@ -358,6 +392,8 @@ nro14 = c("+591 63154413", "+51 944 110 083", "+591 69176594",
 "+591 78880665", "+591 76729112", "+591 73235703", 
 "+591 74091495", "+591 75391410", "+591 77529297", 
 "+591 62446093")
+
+df14 = data.frame(numero=nro14, lugar = "Zoom", descripcion = "Taller \"Herramientas Tecnológicas para Potenciar las Ventas \"  Intermedio G1 CapacitaRSE Mujer 2025")
 ```
 
 
@@ -377,6 +413,8 @@ nro15 = c("+51 944 110 083", "+591 75293831", "+591 67041845",
 "+591 67056744", "+591 73588718", "+591 60573300", 
 "+591 77756218", "+591 78951575", "+591 63132091", 
 "+591 70548338", "+591 60586332", "+591 75847384")
+
+df15 = data.frame(numero=nro15, lugar = "El Alto", descripcion = "EL ALTO- G2 Nivel Inicial Cn Sala de Niños BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
 
 
@@ -400,7 +438,52 @@ nro16 = c("+51 944 110 083", "+591 60009734", "+591 63418074",
 "+591 77655230", "+591 67814450", "+591 71456681", 
 "+591 76630034", "+591 67805016", "+591 70482418", 
 "+591 79364931", "+591 74252191", "+591 70940242")
+
+df16 = data.frame(numero=nro16, lugar = "Santa Cruz", descripcion = "SCZ- Nivel Intermedio G1 BancoSol Taller Presencial Herramientas Tecnológicas 2025")
 ```
+
+
+```{r}
+
+df_total = rbind(df1, df2, df3, df4, df5, df6, df7, df8,
+                 df9, df10, df11, df12, df13, df14, df15, df16)
+
+
+df_total %>% View()
+
+df_total %>% group_by(numero) %>% count() %>% arrange(desc(n))
+
+library(writexl)
+
+#df_total %>% write_xlsx("numerosW.xlsx")
+
+bdt = read_excel("database/IDB_v2.xls", sheet = "BaseDatos")
+df_total$numero
+
+aux1 = df_total %>% filter(numero!="+51 944 110 083")
+aux1$numero
+
+substr(aux1$numero,regexpr(" ",aux1$numero)+1,length(aux1$numero))
+
+aux2=aux1 %>% mutate(numero_bas = as.integer(substr(numero, regexpr(" ",numero)+1,length(numero))))
+aux2$numero_bas
+
+bdt_comp = bdt %>% left_join(aux2, by= c("numero_bas"))
+bdt_comp %>% View()
+
+bdt_gen = bdt_comp %>% mutate(EnLosGrupos= ifelse(is.na(numero),'No esta dentro de los grupos','Si esta dentro de los grupos'))
+
+bdt_gen %>% View()
+
+bdf = aux2 %>% left_join(bdt, by = c("numero_bas")) 
+bdf_1 = bdf %>% mutate(EnLaBase = ifelse(is.na(nombre_registro),"No esta en la Base","Si esta en la Base"))
+
+bdf_1 %>% write_xlsx("BS_1.xlsx")
+
+#bdt_gen %>% write_xlsx("BancoSolT.xlsx")
+
+```
+
 
 
 
