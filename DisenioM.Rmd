@@ -200,4 +200,162 @@ que esta casadas, embarazadas o an tenido un parto hace 5 a 2 anios
 
 
 
+```{r}
+library(haven)
+edshist <- read_sav("database/EDSA/EDSA2023/EDSA2023_HistorialParidad.sav")
+edsm = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
+edsh = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
+
+edshist %>% get_label()
+
+edshist %>% select(ms04_0409_A:ms04_0409_X_cod)
+
+edshist %>% pull(ms04_0429)
+
+edshist %>% group_by(as_label(ms04_0429),as_label(lugar_parto)) %>% count() %>% View()
+
+
+aux1 = edshist %>% left_join(edsh,by =c("folio", "nro", "upm", "estrato")) 
+
+aux2 = aux1 %>% 
+  mutate(
+    persaten = case_when(
+      per_aten_parto == 1 ~ "Medico",
+      per_aten_parto %in% c(2,3) ~ "Enfermera/Auxiliar de Enfermeria",
+      per_aten_parto == 4 ~ "Partera",
+      per_aten_parto %in% c(5,6) ~ "Pariente/Otra Persona",
+      per_aten_parto == 7 ~ "No recibio atencion",
+      TRUE ~ NA_character_
+    ),
+    
+    perscal = case_when(
+      per_aten_parto %in% c(1,2,3) ~ "Personal calificado",
+      per_aten_parto %in% c(4,5,6,7) ~ "Personal no calificado",
+      TRUE ~ NA_character_
+    ),
+    
+    estSalud = case_when(
+      lugar_parto %in% c(1,2) ~ "Establecimiento de Salud",
+      lugar_parto == 3 ~ "En domicilio",
+      lugar_parto == 4 ~ "En otro lugar",
+      TRUE ~ NA_character_
+    )
+  )
+
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, lugar_parto != 5 ) %>%  group_by(lugar_parto) %>% summarise(n = sum(ponderadorm)) %>%  mutate(n = round(n / sum(n)*100,3))
+
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0) %>%  group_by(persaten) %>% summarise(n = sum(ponderadorm)) %>% mutate(n = round(n / sum(n)*100,3))
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, lugar_parto != 5) %>%  group_by(estSalud) %>% summarise(n = sum(ponderadorm)) %>%  mutate(n = round(n / sum(n)*100,3))
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0) %>%  group_by(perscal) %>% summarise(n = sum(ponderadorm)) %>% mutate(n = round(n / sum(n)*100,3))
+
+#library(survey)
+#library(srvyr)
+#
+#deg1 = svydesign(id = ~upm,
+#                   strata = ~estrato,
+#                   weights = ~factorexph,
+#                   data = aux2)
+#  
+#aux1_deg = as_survey(deg1)
+#
+#aux1_deg %>% filter(hs01_0004a >= 15 & hs01_0004a <= 49, lugar_parto != 5) %>% group_by(lugar_parto) %>% summarise(n = #survey_total()) %>% mutate(n = n / sum(n)*100)
+
+
+## Pando
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, lugar_parto != 5, departamento == 5) %>%  group_by(estSalud) %>% summarise(n = sum(ponderadorm)) %>%  mutate(n = round(n / sum(n)*100,3))
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0, departamento == 5) %>%  group_by(perscal) %>% summarise(n = sum(ponderadorm)) %>% mutate(n = round(n / sum(n)*100,3))
+
+## Beni
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, lugar_parto != 5, departamento == 8) %>%  group_by(estSalud) %>% summarise(n = sum(ponderadorm)) %>%  mutate(n = round(n / sum(n)*100,3))
+
+aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0, departamento == 8) %>%  group_by(perscal) %>% summarise(n = sum(ponderadorm)) %>% mutate(n = round(n / sum(n)*100,3))
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+graf <- aux2 %>% 
+  filter(hs01_0004a >= 15 & hs01_0004a <= 49,
+         lugar_parto != 5,
+         departamento %in% c(5,8)) %>% 
+  mutate(depto = case_when(
+    departamento == 5 ~ "Pando",
+    departamento == 8 ~ "Beni"
+  )) %>% 
+  group_by(depto, estSalud) %>% 
+  summarise(n = sum(ponderadorm), .groups = "drop") %>% 
+  group_by(depto) %>% 
+  mutate(porcentaje = n/sum(n)*100)
+
+ggplot(graf, aes(x = depto, y = porcentaje, fill = estSalud)) +
+  geom_col(position = position_dodge(0.8), 
+           width = 0.7,
+           color = "white") +
+  geom_text(aes(label = paste0(round(porcentaje,1),"%")),
+            position = position_dodge(0.8),
+            vjust = -0.3,
+            size = 4) +
+  scale_fill_manual(values = c("#2C7FB8","#7FCDBB","#EDF8B1")) +
+  labs(
+    title = "Lugar del parto por departamento",
+    x = "",
+    y = "Porcentaje",
+    fill = "Lugar de parto"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  ) +
+  ylim(0,100)
+
+```
+
+```{r}
+graf2 <- aux2 %>% 
+  filter(hs01_0004a >= 15 & hs01_0004a <= 49,
+         per_aten_parto != 0,
+         departamento %in% c(5,8)) %>% 
+  mutate(depto = case_when(
+    departamento == 5 ~ "Pando",
+    departamento == 8 ~ "Beni"
+  )) %>% 
+  group_by(depto, perscal) %>% 
+  summarise(n = sum(ponderadorm), .groups = "drop") %>% 
+  group_by(depto) %>% 
+  mutate(porcentaje = n/sum(n)*100)
+
+ggplot(graf2, aes(x = depto, y = porcentaje, fill = perscal)) +
+  geom_col(position = position_dodge(0.8),
+           width = 0.7,
+           color = "white") +
+  geom_text(aes(label = paste0(round(porcentaje,1),"%")),
+            position = position_dodge(0.8),
+            vjust = -0.3,
+            size = 4) +
+  scale_fill_manual(values = c("#1B9E77","#D95F02")) +
+  labs(
+    title = "Atención del parto por personal calificado",
+    x = "",
+    y = "Porcentaje",
+    fill = "Tipo de atención"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  ) +
+  ylim(0,100)
+```
+
 

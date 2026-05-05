@@ -31,6 +31,10 @@ edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
+edsaV
+edsa %>% filter(hs03_0033==1) %>% group_by(folio) %>% count()
+
+
 
 ### 
 edsaV %>% get_label()
@@ -259,35 +263,42 @@ edsa %>% mutate(
 
 
 
+##########################################################################################
+edsa$hs03_0039_X_cod
+is.na(edsa$hs03_0039_Z)
+
+edsa %>% select(hs03_0035_A:hs03_0035_X_cod) %>% get_label()
+
 bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
   mutate(nro=hs01_0007)
 
-aux2 = edsa %>% 
-  filter(hs01_0004a >= 16, hs03_0033 == 1, !(hs03_0039_X_cod== 'Q'), is.na(hs03_0039_Z),
-         hs01_0010!=3) %>% 
-  mutate(formal = rowSums(across(hs03_0035_A:hs03_0035_Q) == 1, na.rm = TRUE),
-         informal = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X, hs03_0035_Z)) == 1,na.rm = TRUE),
-         nofue = rowSums(across(hs03_0035_V) == 1,na.rm = TRUE)) %>% 
+aux2 = edsa %>% filter(hs01_0004a >= 0,  #edad
+                hs03_0033 == 1, # problema de salud en los ultimos 3 meses 1=si
+                # is.na(edsa$hs03_0039_Z)  # se excluyen a los que no saben donde fueron llevados
+                ) %>% 
+  mutate(
+    SectorPublico = rowSums(across(hs03_0035_A:hs03_0035_O) == 1, na.rm = TRUE),
+    SectorPrivado = rowSums(across(hs03_0035_P:hs03_0035_Q) == 1, na.rm = TRUE),
+    atencionAlt = rowSums(across(c(hs03_0035_R:hs03_0035_U, hs03_0035_X)) == 1, na.rm = TRUE),
+    noFue = rowSums(across(hs03_0035_V) == 1, na.rm = TRUE),
+    noSabe = rowSums(across(hs03_0035_Z) == 1, na.rm = TRUE)
+  ) %>% 
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) %>% 
   left_join(bd1, by = c("folio","nro"))
-##########################################################################################
-##########################################################################################
-aux2 %>% group_by(formal, informal , nofue) %>% count() %>% summarise()
-
 
 aux2 = aux2 %>% 
-  filter(!(formal==0 & informal==0 & nofue==0)) %>% 
+  filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>% 
   mutate(servicio = case_when(
-    formal >= 1 ~ "Acceso a servicios de salud",
-    informal >= 1 ~ "Atención alternativa",
+    SectorPublico >= 1 | SectorPrivado >= 1 ~ "Acceso a establecimiento de Salud",
+    atencionAlt >= 1 ~ "Acceso a atencion alternativa",
     TRUE ~ "No accedió a atención"
   ),
   accesoS = case_when(
-    formal >= 1 ~ "Acceso a servicios de salud",
+    SectorPublico >= 1 | SectorPrivado >= 1 ~ "Acceso a establecimiento de Salud",
     TRUE ~ "No accedió a atención"
   ),
   atenAltenativa = case_when(
-    informal >= 1 ~ "Busco atencion alternativa",
+    atencionAlt >= 1  ~ "Busco a atencion alternativa",
     TRUE ~ "No busco atencion alternativa"
   ))
 ######################################################################################

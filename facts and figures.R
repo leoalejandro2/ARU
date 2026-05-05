@@ -23,9 +23,9 @@ emp43 <- read_sav("database/empleo/ECE_3T2024.sav")
 emp44 <- read_sav("database/empleo/ECE_4T2024.sav")
 emp51 <- read_sav("database/empleo/ECE_1T2025.sav")
 emp52 <- read_sav("database/empleo/ECE_2T2025.sav")
-save(emp21,emp22,emp23,emp24,emp31,emp32,emp33,emp34,emp41,emp42,emp43,emp44,emp51,emp52,
-     file= "database/empleo/emp.RData")
-load("database/empleo/emp.RData")
+#save(emp21,emp22,emp23,emp24,emp31,emp32,emp33,emp34,emp41,emp42,emp43,emp44,emp51,emp52,
+#     file= "database/empleo/emp.RData")
+#load("database/empleo/emp.RData")
 
 #####################################################################
 tiem_des=NULL
@@ -166,7 +166,7 @@ ntab2 = ntab2 %>% mutate(
 
 ntab2
 
-write_xlsx(ntab2, "aux1.xlsx")
+# write_xlsx(ntab2, "aux1.xlsx")
 # factores que afectan al participacion laboral     
 # factores sociales, edicacion, caracteristicas de salud
 #########################################################################################################3
@@ -202,7 +202,7 @@ ntab1 = tab1 %>% group_by(s2_08a) %>% summarise(p=sum(p)) %>% arrange(desc(p))
 
 ntab1$s2_08a = gsub("^[0-9]+\\.\\s*", "", ntab1$s2_08a)
 
-write_xlsx(ntab1, "aux1.xlsx")
+#write_xlsx(ntab1, "aux1.xlsx")
 
 ntab1$s2_08a <- str_wrap(ntab1$s2_08a, width = 30)
 
