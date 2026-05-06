@@ -31,20 +31,128 @@ edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
-edsaV
-edsa %>% filter(hs03_0033==1) %>% group_by(folio) %>% count()
-
-
-
-### 
-edsaV %>% get_label()
-edsa %>% filter((hs03_0033 == 1)) %>% get_labels()
-
-edsa %>% pull(afilsegsal) %>% table()
-  
+##################################################################3#############################
 edsa %>% get_label()
-  
-get_label(edsa)
+
+edsa %>% group_by(afilsegsal) %>% count()
+
+ax1 = edsa %>% mutate(
+  seg = labelled(case_when(
+  afilsegsal %in% c(1,2,3,5) ~ 1,
+  afilsegsal == 6 ~ 0),labels = c(
+  "Afiliado a algun seguro" = 1,
+  "Sin afiliacion" = 0)),
+  Atencion = labelled(case_when(
+    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 |
+      hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 |
+      hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
+      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 |
+      hs03_0035_P==1 | hs03_0035_Q==1 ~ 1,
+    TRUE ~ 0
+  ),labels = c(
+    "Atendido" = 1,
+    "No Atendido" = 0
+  )),
+  AseguroSus = (case_when(
+    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 ~ "Centro de Salud"
+  )),
+  Ahospital23 = (case_when(
+    hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 ~ "Hospital de 2 y 3 nivel"
+  )), 
+  AseguroCaja = (case_when(
+    hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
+      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 ~ "Cajas de Salud"
+  )),
+  APrivado = (case_when(
+    hs03_0035_P==1 | hs03_0035_Q==1 ~ "Privado"
+  )),
+  NoAcudio = (case_when(
+    hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
+      hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1 ~ "No acudio a establecimiento"
+  ))
+  ) 
+
+
+ax1$afilsegsal
+ax1 %>% filter(hs03_0033 == 1) %>% group_by(Atencion) %>% count()
+ax1 %>% filter(hs03_0033 == 1) %>% group_by(NoAcudio) %>% count()
+
+
+ax1 %>% filter(hs03_0033 == 1) %>% group_by(afilsegsal) %>% count()
+
+ax1 %>% filter(hs03_0033 == 1) %>% 
+  group_by(AseguroSus, Ahospital23, AseguroCaja, APrivado,NoAcudio) %>% count() %>% View()
+
+
+ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>%  group_by(seg, Atencion) %>% count()
+
+
+(482 + 658 + 1759 + 10818 - 482 - 658 - 1759) / (482 + 658 + 1759 + 10818)
+
+
+
+desg1 = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factorexph,
+  data = (ax1)
+)
+
+bd_deg = as_survey(desg1)
+
+bd_deg %>% filter(afilsegsal != 4) %>% group_by(area,seg) %>% 
+  summarise(n = survey_total() ) %>% mutate(prob = n/sum(n)) 
+
+qnorm(0.975)
+
+bd_deg %>% 
+  filter(afilsegsal != 4) %>% 
+  group_by(area, seg) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95) 
+  ) %>% 
+  mutate(
+    # Para los intervalos de la proporción (proporción = n / sum(n))
+    prop = n / sum(n),
+    prop_low = n_low / sum(n),
+    prop_upp = n_upp / sum(n)
+  )
+
+
+
+bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>% 
+  group_by(area, hs03_0033) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95)
+  ) %>% mutate(
+    prob = n / sum(n),
+    prob_low = n_low / sum(n),
+    prob_upp = n_upp / sum(n)
+  )
+
+bd_deg
+
+bd_deg %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  group_by(area, seg, Atencion) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95)
+  ) %>% 
+  group_by(area) %>% 
+  mutate(
+    prob = n / sum(n),
+    prob_low = n_low / sum(n),
+    prob_upp = n_upp / sum(n)
+  )
+
+bd_deg
+
+
+
+
+##################################################################3#############################
+
+
+
 #establecimiento o servicio de salud
 
 edsa$hs03_0033
@@ -272,7 +380,7 @@ edsa %>% select(hs03_0035_A:hs03_0035_X_cod) %>% get_label()
 bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
   mutate(nro=hs01_0007)
 
-aux2 = edsa %>% filter(hs01_0004a >= 0,  #edad
+aux2 = edsa %>% filter(hs01_0004a >= 12,  #edad
                 hs03_0033 == 1, # problema de salud en los ultimos 3 meses 1=si
                 # is.na(edsa$hs03_0039_Z)  # se excluyen a los que no saben donde fueron llevados
                 ) %>% 
@@ -298,67 +406,25 @@ aux2 = aux2 %>%
     TRUE ~ "No accedió a atención"
   ),
   atenAltenativa = case_when(
-    atencionAlt >= 1  ~ "Busco a atencion alternativa",
+    atencionAlt >= 1  ~ "Busco atencion alternativa",
     TRUE ~ "No busco atencion alternativa"
   ))
 ######################################################################################
-designdesc = svydesign(
-  ids = ~upm,
-  strata = ~estrato,
-  weights = ~factorexph,
-  data = (aux2)
-)
-
-bd1 = as_survey(designdesc)
-
-tabla <- bd1 %>% 
-  group_by(accesoS) %>% 
-  summarise(n = survey_total()) %>% 
-  mutate(porc = n/sum(n)*100)
-
-
-ggplot(tabla, aes(x = accesoS, y = porc, fill = accesoS)) +
-  geom_col(width = 0.5, color = "white") +
-  geom_text(aes(label = paste0(round(porc,1), "%")),
-            vjust = -0.5,
-            size = 4) +
-  scale_fill_manual(values = c(
-    "#D94801",  # naranja fuerte
-    "#F16913",  # naranja medio
-    "#FDAE6B"   # naranja claro
-  )) +
-  labs(
-    x = "",
-    y = "Porcentaje",
-    title = "Acceso a servicios de salud",
-    fill = "Servicios de salud"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = "none",
-    text = element_text(size = 12),
-    plot.title = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  ) +
-  ylim(0,100)
 ######################################################################################
-
-
-
 aux2 = aux2 %>% 
-  filter(!(formal==0 & informal==0 & nofue==0)) %>% 
+  filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>%
   mutate(
     
     # Variable 3 categorías
     servicio = labelled(
       case_when(
-        formal >= 1 ~ 1,
-        informal >= 1 ~ 2,
+        SectorPublico >= 1 | SectorPrivado >= 1 ~ 1,
+        atencionAlt >= 1 ~ 2,
         TRUE ~ 3
       ),
       labels = c(
-        "Acceso a servicios de salud" = 1,
-        "Atención alternativa" = 2,
+        "Acceso a establecimiento de Salud" = 1,
+        "Acceso a atencion alternativa" = 2,
         "No accedió a atención" = 3
       )
     ),
@@ -366,24 +432,24 @@ aux2 = aux2 %>%
     # Variable binaria acceso formal
     accesoS = labelled(
       case_when(
-        formal >= 1 ~ 1,
+        SectorPublico >= 1 | SectorPrivado >= 1 ~ 1,
         TRUE ~ 0
       ),
       labels = c(
         "No accedió a atención" = 0,
-        "Acceso a servicios de salud" = 1
+        "Acceso a establecimiento de Salud" = 1
       )
     ),
     
     # Variable binaria atención alternativa
     atenAltenativa = labelled(
       case_when(
-        informal >= 1 ~ 1,
+        atencionAlt >= 1 ~ 1,
         TRUE ~ 0
       ),
       labels = c(
-        "No buscó atención alternativa" = 0,
-        "Buscó atención alternativa" = 1
+        "No busco atencion alternativa" = 0,
+        "Busco atencion alternativa" = 1
       )
     ),
     cuidador = labelled(
@@ -577,8 +643,15 @@ aux3 = aux2 %>%
    educa = as_label(niv_ed_g),
    reg = as_label(region),
    naturalista2022 = as_label(hs03_0030),
-   csalud2022 = as_label(hs03_0031)
+   csalud2022 = as_label(hs03_0031),
+   enfCronica = as_label(hs03_a_0041)
   )
+
+aux3 %>% get_label()
+aux3$hs03_0040
+aux3$hs03_a_0041
+
+aux3$enfCronica %>% table()
 
 aux2 %>% get_label()
 
@@ -605,22 +678,13 @@ design = svydesign(
   
 
 modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  + 
-                   naturalista2022 + csalud2022 + atenAltenativa +
-                   infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + sintomas_f + atencion_f,
+                   naturalista2022 + csalud2022 + atenAltenativa +enfCronica +
+                   infecciosa_f + Sangre_metabolico + cronica_f + mental_f + 
+                   lesiones_f + sintomas_f + atencion_f,
                    design = design,
                    family = quasibinomial())
 
 summary(modelo)
-
-library(stargazer)
-library(broom)
-
-
-
-
-stargazer(modelo, type='latex', summary=TRUE)
-
-
 
 regTermTesmodeloregTermTest(modelo, ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + niv_edu +
               atenAltenativa +
@@ -656,10 +720,11 @@ pseudo_r2_adj
 
 #############################################################################################################
 
-modelo_logit <- glm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez + idiomaN + 
-                      atenAltenativa +
-                      infecciosa_f + Sangre_metabolico + cronica_f + mental_f + lesiones_f + 
-                      sintomas_f + atencion_f, data = aux3, family = "binomial")
+modelo_logit <- glm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  + 
+                      naturalista2022 + csalud2022 + atenAltenativa +enfCronica +
+                      infecciosa_f + Sangre_metabolico + cronica_f + mental_f + 
+                      lesiones_f + sintomas_f + atencion_f, 
+                    data = aux3, family = "binomial")
 
 # Ver el resumen del modelo
 summary(modelo_logit)
