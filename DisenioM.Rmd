@@ -13,6 +13,10 @@ library(writexl)
 
 ```
 
+
+
+
+
 planter bien los modelos
 
 que factores hacen que una persona asistan a un servicio de salud
@@ -268,7 +272,10 @@ aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0) %>%  group
 ## Pando
 
 aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, lugar_parto != 5, departamento == 5) %>%  group_by(estSalud) %>% summarise(n = sum(ponderadorm)) %>%  mutate(n = round(n / sum(n)*100,3))
+```
 
+
+```{r}
 aux2 %>% filter(hs01_0004a>=15 & hs01_0004a<=49, per_aten_parto != 0, departamento == 5) %>%  group_by(perscal) %>% summarise(n = sum(ponderadorm)) %>% mutate(n = round(n / sum(n)*100,3))
 
 ## Beni
