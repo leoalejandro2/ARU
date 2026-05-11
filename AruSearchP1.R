@@ -51,10 +51,9 @@ pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
 
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 58ddbcf60f64ceb78dcde3d291d30669596d7b72
+
+
 edsav16 %>% group_by(vs06_0634) %>% summarise(n = sum(ponderadorv)) %>% mutate(n = n / sum(n))
 
 
