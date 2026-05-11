@@ -37,11 +37,18 @@ edsah16 = read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
 edsav16 = read_sav("database/EDSA/EDSA2016/EDSA16_HOMBRES.sav")
 edsam16 = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_ANTECEDENTES.sav")
 
+pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
+
+
+
+
+
 # vs06_0635a
 # vs06_0635b
 # vs06_0635c
 # vs06_0635X
 # vs06_0635_1cod
+
 
 
 edsav16 %>% group_by(vs06_0634) %>% summarise(n = sum(ponderadorv)) %>% mutate(n = n / sum(n))
@@ -99,7 +106,10 @@ ax1 = edsa %>% mutate(
     hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
       hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1 ~ "No acudio a establecimiento"
   ))
-) 
+) %>% left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) 
+
+
+ax1 %>% filter(hs03_0033 == 1) %>% group_by(qriqueza) %>% count()
 
 
 ax1$afilsegsal
@@ -115,8 +125,22 @@ ax1 %>% filter(hs03_0033 == 1) %>%
 
 ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>%  group_by(seg, Atencion) %>% count()
 
+ax1$afilsegsal
 
-(482 + 658 + 1759 + 10818 - 482 - 658 - 1759) / (482 + 658 + 1759 + 10818)
+
+
+ax1  %>% filter(hs03_0033 == 1, afilsegsal != 4)%>% mutate(atenCualquiera = case_when(
+  (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+    (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
+    AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ "Cualquier proveedor",
+  TRUE ~ "No atencion"),atenProvedor = case_when(
+  ## SUS
+  afilsegsal == 3 & (APrivado == "Privado")~ "Proveedor",
+  afilsegsal == 2 & (AseguroCaja == "Cajas de Salud" | Ahospital23 == "Hospital de 2 y 3 nivel")~ "Proveedor",
+  afilsegsal == 1 & (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel") ~ "Proveedor",
+  TRUE ~ "No Proveedor"
+)) %>% group_by(atenCualquiera) %>% count() 
+
 
 
 
@@ -129,29 +153,32 @@ desg1 = svydesign(
 
 bd_deg = as_survey(desg1)
 
+## 
+bd_deg %>% 
 
 
-ax1$hs01_0003
+
+### Seguro
+
 bd_deg %>% filter(afilsegsal != 4) %>% group_by(area,seg) %>% 
   summarise(n = survey_total() ) %>% mutate(prob = n/sum(n)) 
 
-qnorm(0.975)
-
-
 bd_deg %>% 
   filter(afilsegsal != 4) %>% 
-  group_by(hs01_0003, seg) %>% 
+  group_by(seg) %>% 
   summarise(
     n = survey_total(vartype = "ci", level = 0.95) 
   ) %>% 
   mutate(
     # Para los intervalos de la proporción (proporción = n / sum(n))
-    prop = n / sum(n),
-    prop_low = n_low / sum(n),
-    prop_upp = n_upp / sum(n)
-  )
+    prop = n / sum(n) * 100,
+    prop_low = n_low / sum(n) * 100,
+    prop_upp = n_upp / sum(n) * 100
+  ) %>% View()
 
 
+
+### problema de salud
 
 bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>% 
   group_by(area, hs03_0033) %>% 
@@ -165,12 +192,14 @@ bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>%
 
 bd_deg
 
+
+
 bd_deg %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
-  group_by(area, seg, Atencion) %>% 
+  group_by(hs01_0003, seg, Atencion) %>% 
   summarise(
     n = survey_total(vartype = "ci", level = 0.95)
   ) %>% 
-  group_by(area) %>% 
+  group_by(hs01_0003) %>% 
   mutate(
     prob = n / sum(n),
     prob_low = n_low / sum(n),
@@ -178,3 +207,8 @@ bd_deg %>% filter(hs03_0033 == 1, afilsegsal != 4) %>%
   )
 
 bd_deg
+
+
+
+
+
