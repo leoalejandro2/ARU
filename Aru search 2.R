@@ -266,7 +266,7 @@ edsa %>% select(hs03_0035_A:hs03_0035_X_cod) %>% get_label()
 bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
   mutate(nro=hs01_0007)
 
-aux2 = edsa %>% filter(hs01_0004a >= 12,  #edad
+aux2 = edsa %>% filter(hs01_0004a >= 0,  #edad
                 hs03_0033 == 1, # problema de salud en los ultimos 3 meses 1=si
                 # is.na(edsa$hs03_0039_Z)  # se excluyen a los que no saben donde fueron llevados
                 ) %>% 
@@ -496,6 +496,30 @@ aux2 = aux2 %>%
 aux2 %>% group_by( servicio) %>% count()
 
 aux2 %>% group_by(accesoS) %>% count()
+
+desg1 = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factorexph,
+  data = (aux2)
+)
+
+bd_deg = as_survey(desg1)
+
+## 
+bd_deg %>% 
+  filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  group_by(accesoS) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95) 
+  ) %>% 
+  mutate(
+    prop = n / sum(n) * 100,
+    prop_low = n_low / sum(n) * 100,
+    prop_upp = n_upp / sum(n) * 100
+  ) 
+
+
 
 aux3 = aux2 %>% 
   mutate(

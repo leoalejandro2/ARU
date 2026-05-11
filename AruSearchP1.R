@@ -39,6 +39,59 @@ edsam16 = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_ANTECEDENTES.sav")
 
 pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
+eh23 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
+edsa$aestudio
+
+eh23$ylab[is.na(eh23$ylab)] <- 1
+ml1 = svydesign(
+  ids = ~upm,
+  strata = ~estrato,
+  weights = ~factor,
+  data = (eh23)
+)
+
+edsah$vs01_0148
+edsam$ms08_0809
+
+bd_eh = as_survey(ml1)
+
+eh23$s04a_01
+modelo <- svyglm(
+  log(ylab) ~ s01a_03 + I(s01a_03^2) + as_label(s01a_02) + 
+    as_label(area)  +aestudio  + as_label(s04a_01) ,
+  design = ml1
+)
+
+model1 <- summary(modelo)
+print(model1)
+
+
+w      <- weights(modelo$survey.design, type = "sampling")
+resids <- residuals(modelo, type = "working")
+y      <- fitted(modelo) + resids
+
+w_mean <- weighted.mean(y, w)
+
+wRSS <- sum(w * resids^2)
+wTSS <- sum(w * (y - w_mean)^2)
+
+R2 <- 1 - wRSS / wTSS
+
+n  <- length(y)
+k  <- length(coef(modelo)) - 1
+R2_adj <- 1 - (1 - R2) * (n - 1) / (n - k - 1)
+
+cat(sprintf("Weighted R²:       %.4f\n", R2))
+cat(sprintf("Weighted Adj. R²:  %.4f\n", R2_adj))
+
+
+# Cargar librería necesaria para pruebas adicionales
+library(survey)
+
+# Prueba de Wald para el modelo global
+regTermTest(modelo, ~ s01a_03 + s01a_02 + area + aestudio)
+
+modelo$coefficients
 
 
 
@@ -108,8 +161,25 @@ ax1 = edsa %>% mutate(
   NoAcudio = (case_when(
     hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
       hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1 ~ "No acudio a establecimiento"
-  ))
+  )),
+  atenCualquiera = case_when(
+    (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+      (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
+         AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ "Cualquier proveedor",
+    TRUE ~ "No atencion"),
+  atenProvedor = case_when(
+    ## SUS
+    afilsegsal == 3 & (APrivado == "Privado")~ "Proveedor",
+    afilsegsal == 2 & (AseguroCaja == "Cajas de Salud" | Ahospital23 == "Hospital de 2 y 3 nivel")~ "Proveedor",
+    afilsegsal == 1 & (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel") ~ "Proveedor",
+    TRUE ~ "No Proveedor")
 ) %>% left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) 
+
+
+
+ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  group_by(afilsegsal,Atencion, atenCualquiera, atenProvedor) %>% 
+  count() %>% View()
 
 
 ax1 %>% filter(hs03_0033 == 1) %>% group_by(qriqueza) %>% count()
@@ -132,19 +202,6 @@ ax1$afilsegsal
 
 
 
-ax1  %>% filter(hs03_0033 == 1, afilsegsal != 4)%>% mutate(atenCualquiera = case_when(
-  (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
-    (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
-    AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ "Cualquier proveedor",
-  TRUE ~ "No atencion"),atenProvedor = case_when(
-  ## SUS
-  afilsegsal == 3 & (APrivado == "Privado")~ "Proveedor",
-  afilsegsal == 2 & (AseguroCaja == "Cajas de Salud" | Ahospital23 == "Hospital de 2 y 3 nivel")~ "Proveedor",
-  afilsegsal == 1 & (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel") ~ "Proveedor",
-  TRUE ~ "No Proveedor"
-)) %>% group_by(atenCualquiera) %>% count() 
-
-
 
 
 desg1 = svydesign(
@@ -157,13 +214,17 @@ desg1 = svydesign(
 bd_deg = as_survey(desg1)
 
 ## 
-bd_deg %>% 
 
+ax1$hs01_0004a
+ax1$niv_ed_g %>% table()
+ax1 %>% group_by(niv_ed_g, hs01_0004a) %>% count() %>% View()
 
+ax1 %>% group_by(niv_ed_g) %>% count()
+
+ax1$qriqueza 
 
 ### Seguro
-
-bd_deg %>% filter(afilsegsal != 4) %>% group_by(area,seg) %>% 
+bd_deg %>% filter(niv_ed_g != 99,afilsegsal != 4) %>% group_by(qriqueza,seg) %>% 
   summarise(n = survey_total() ) %>% mutate(prob = n/sum(n)) 
 
 bd_deg %>% 
@@ -173,41 +234,49 @@ bd_deg %>%
     n = survey_total(vartype = "ci", level = 0.95) 
   ) %>% 
   mutate(
-    # Para los intervalos de la proporción (proporción = n / sum(n))
+    prop = n / sum(n) * 100,
+    prop_low = n_low / sum(n) * 100,
+    prop_upp = n_upp / sum(n) * 100
+  ) %>% View()
+
+## atencion cualquiera
+bd_deg %>% 
+  filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  group_by(atenCualquiera) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95) 
+  ) %>% 
+  mutate(
+    prop = n / sum(n) * 100,
+    prop_low = n_low / sum(n) * 100,
+    prop_upp = n_upp / sum(n) * 100
+  ) %>% View()
+
+## atencion proveedor afiliado
+bd_deg %>% 
+  filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  group_by( atenProvedor) %>% 
+  summarise(
+    n = survey_total(vartype = "ci", level = 0.95) 
+  ) %>% 
+  mutate(
     prop = n / sum(n) * 100,
     prop_low = n_low / sum(n) * 100,
     prop_upp = n_upp / sum(n) * 100
   ) %>% View()
 
 
-
 ### problema de salud
 
 bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>% 
-  group_by(area, hs03_0033) %>% 
+  group_by(hs03_0033) %>% 
   summarise(
     n = survey_total(vartype = "ci", level = 0.95)
   ) %>% mutate(
-    prob = n / sum(n),
-    prob_low = n_low / sum(n),
-    prob_upp = n_upp / sum(n)
-  )
-
-bd_deg
-
-
-
-bd_deg %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
-  group_by(hs01_0003, seg, Atencion) %>% 
-  summarise(
-    n = survey_total(vartype = "ci", level = 0.95)
-  ) %>% 
-  group_by(hs01_0003) %>% 
-  mutate(
-    prob = n / sum(n),
-    prob_low = n_low / sum(n),
-    prob_upp = n_upp / sum(n)
-  )
+    prob = n / sum(n) * 100,
+    prob_low = n_low / sum(n) * 100,
+    prob_upp = n_upp / sum(n) * 100
+  ) %>% View()
 
 bd_deg
 
