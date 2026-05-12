@@ -40,7 +40,27 @@ edsam16 = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_ANTECEDENTES.sav")
 pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
 eh23 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
+
+
+eh23 %>% group_by(s04a_01,ylab) %>% count() %>% View()
+
 edsa$aestudio
+
+edsah$vs01_0148 
+edsah$vs01_0157 
+
+edsah %>% group_by(vs01_0148) %>% count() %>% summarise(n = n/sum(n))
+
+edsah %>% nrow()
+
+edsam$ms08_0809
+
+edsah$vs01_0149
+
+eh23$s04a_01
+eh23 %>% pull(aestudio) %>% summary()
+
+
 
 eh23$ylab[is.na(eh23$ylab)] <- 1
 ml1 = svydesign(
@@ -49,9 +69,6 @@ ml1 = svydesign(
   weights = ~factor,
   data = (eh23)
 )
-
-edsah$vs01_0148
-edsam$ms08_0809
 
 bd_eh = as_survey(ml1)
 
