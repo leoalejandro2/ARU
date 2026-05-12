@@ -38,6 +38,7 @@ edsam16 = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_ANTECEDENTES.sav")
 pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
 eh23 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
+<<<<<<< HEAD
 eh23V = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
 edsaV$hs04_0060 
@@ -131,6 +132,31 @@ bd3$aestudio2[is.na(bd3$aestudio2)] = 0
 #TXZQG
 
 # eh23 = eh23 %>% left_join(eh23V %>% select(folio, s06a_02, s06a_01, s06a_19), by = "folio")
+=======
+
+
+eh23 %>% group_by(s04a_01,ylab) %>% count() %>% View()
+
+edsa$aestudio
+
+edsah$vs01_0148 
+edsah$vs01_0157 
+
+edsah %>% group_by(vs01_0148) %>% count() %>% summarise(n = n/sum(n))
+
+edsah %>% nrow()
+
+edsam$ms08_0809
+
+edsah$vs01_0149
+
+eh23$s04a_01
+eh23 %>% pull(aestudio) %>% summary()
+
+
+
+eh23$ylab[is.na(eh23$ylab)] <- 1
+>>>>>>> f8996b25bdb7b90004312b71c6922f6189b5e393
 ml1 = svydesign(
   ids = ~upm,
   strata = ~estrato,
