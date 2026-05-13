@@ -333,7 +333,7 @@ bd_deg %>%
 ## atencion proveedor afiliado
 bd_deg %>% 
   filter(hs03_0033 == 1, afilsegsal != 4) %>% 
-  group_by( atenProvedor) %>% 
+  group_by(atenProvedor) %>% 
   summarise(
     n = survey_total(vartype = "ci", level = 0.95) 
   ) %>% 
@@ -358,190 +358,211 @@ bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>%
 
 bd_deg
 
-##########################################################
-library(dplyr)
 
-# Work with non-missing seg observations (afilsegsal != 4 → seg is NA)
-ax1 %>%  filter(afilsegsal != 4) %>% 
-  pull(seg) %>% summary()
 
-ax1 %>% arrange(log_ylab_est) %>% select(seg, log_ylab_est)
+#######################################################################
+library(rineq)
 
-ci_data <- ax1 %>% 
-  filter(!is.na(seg)) %>% 
+ci_data1 = ax1 %>% filter(afilsegsal != 4) %>% 
+  select(log_ylab_est, factorexph, seg)
+
+as_numeric(ci_data1$log_ylab_est)
+
+result_ci = ci(
+  ineqvar = as.numeric(ci_data1$log_ylab_est),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg)
+)
+
+result_e <- ci(
+  ineqvar = as.numeric(ci_data1$log_ylab_est),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg),
+  type     = "CIc"
+)
+
+result_w <- ci(
+  ineqvar = as.numeric(ci_data1$log_ylab_est),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg),
+  type     = "CIw"
+)
+
+summary(result_ci)
+summary(result_e)
+summary(result_w)
+
+sqrt(result_w$variance)
+
+###########################################################3
+
+ci_data2 = ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  select(log_ylab_est, factorexph, atenCualquiera) %>% 
   mutate(
-    seg_num = as.numeric(seg),
-    w       = factorexph
-  ) |>
-  arrange(log_ylab_est) |>
+    atencualquer = ifelse(atenCualquiera == "Cualquier proveedor", 1, 0))
+ci_data2  
+
+result_ci = ci(
+  ineqvar = as.numeric(ci_data2$log_ylab_est),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer)
+)
+
+result_e <- ci(
+  ineqvar = as.numeric(ci_data2$log_ylab_est),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer),
+  type     = "CIc"
+)
+
+result_w <- ci(
+  ineqvar = as.numeric(ci_data2$log_ylab_est),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer),
+  type     = "CIw"
+)
+
+summary(result_ci)
+summary(result_e)
+summary(result_w)
+
+######################################################3
+ax1$area
+
+
+ci_data3 = ax1 %>% filter(area==1) %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  select(log_ylab_est, factorexph, atenProvedor) %>% 
   mutate(
-    # Weighted fractional rank
-    cum_w  = cumsum(w),
-    r      = (cum_w - 0.5 * w) / sum(w)
-  )
+    atenprov = ifelse(atenProvedor == "Proveedor", 1, 0))
+ci_data3
 
+result_ci = ci(
+  ineqvar = as.numeric(ci_data3$log_ylab_est),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov)
+)
 
+result_e <- ci(
+  ineqvar = as.numeric(ci_data3$log_ylab_est),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov),
+  type     = "CIc"
+)
 
-ci_data$seg_num
-ci_data$factorexph
-ci_data$r
+result_w <- ci(
+  ineqvar = as.numeric(ci_data3$log_ylab_est),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov),
+  type     = "CIw"
+)
 
-# Survey-weighted mean of seg
-mu <- weighted.mean(ci_data$seg_num, ci_data$w)
-
-# Weighted covariance between seg and rank
-wcov <- cov.wt(
-  cbind(ci_data$seg_num, ci_data$r),
-  wt = ci_data$w,
-  method = "ML"
-)$cov[1, 2]
-
-# Standard CI
-CI <- 2 * wcov / mu
-
-# Erreygers CI (preferred for binary)
-CI_E <- 4 * mu * CI
-
-# Wagstaff CI
-CI_W <- CI / (1 - mu)
-
-cat(sprintf("Prevalence (μ):       %.4f\n", mu))
-cat(sprintf("Standard CI:          %.4f\n", CI))
-cat(sprintf("Erreygers CI:         %.4f\n", CI_E))
-cat(sprintf("Wagstaff CI:          %.4f\n", CI_W))
-cat(sprintf("Theoretical bounds:   [%.4f, %.4f]\n", mu - 1, 1 - mu))
+summary(result_ci)
+summary(result_e)
+summary(result_w)
 
 
 
 
-compute_ci <- function(df) {
-  df <- df |>
-    filter(!is.na(seg)) |>
-    mutate(seg_num = as.numeric(seg), w = factorexph) |>
-    arrange(log_ylab_est) |>
-    mutate(
-      cum_w = cumsum(w),
-      r     = (cum_w - 0.5 * w) / sum(w)
-    )
-  
-  mu   <- weighted.mean(df$seg_num, df$w)
-  wcov <- cov.wt(cbind(df$seg_num, df$r), wt = df$w, method = "ML")$cov[1, 2]
-  CI   <- 2 * wcov / mu
-  
-  tibble(
-    n        = nrow(df),
-    mu       = mu,
-    CI       = CI,
-    CI_E     = 4 * mu * CI,
-    CI_W     = CI / (1 - mu),
-    bound_lo = mu - 1,
-    bound_hi = 1 - mu
-  )
-}
+####################################################
+####################################################
+##########################
 
-ax1 |>
-  mutate(area_label = as_label(area)) |>
-  group_by(area_label) |>
-  group_modify(~ compute_ci(.x)) |>
-  bind_rows(
-    compute_ci(ax1) |> mutate(area_label = "Total") |> select(area_label, everything())
-  )
+#######################################################################
+library(rineq)
+ax1$qriqueza
+ci_data1 = ax1 %>% filter(afilsegsal != 4) %>% 
+  select(log_ylab_est,qriqueza, factorexph, seg)
 
-###########################################################
+as_numeric(ci_data1$qriqueza)
 
+result_ci = ci(
+  ineqvar = as.numeric(ci_data1$qriqueza),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg)
+)
 
-compute_ci_unweighted <- function(df) {
-  df <- df |>
-    filter(!is.na(seg)) |>
-    mutate(
-      seg_num = as.numeric(seg),
-      w       = 1  # equal weights
-    ) |>
-    arrange(log_ylab_est) |>
-    mutate(
-      n   = n(),
-      r   = (row_number() - 0.5) / n  # simplified fractional rank
-    )
-  
-  mu   <- mean(df$seg_num)
-  wcov <- cov(df$seg_num, df$r)
-  CI   <- 2 * wcov / mu
-  
-  tibble(mu = mu, CI = CI, CI_E = 4 * mu * CI, CI_W = CI / (1 - mu))
-}
+result_e <- ci(
+  ineqvar = as.numeric(ci_data1$qriqueza),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg),
+  type     = "CIc"
+)
 
-cat("--- Weighted (factorexph) ---\n")
-cat(sprintf("CI: %.4f | CI_E: %.4f | CI_W: %.4f\n", CI, CI_E, CI_W))
+result_w <- ci(
+  ineqvar = as.numeric(ci_data1$qriqueza),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg),
+  type     = "CIw"
+)
 
-cat("\n--- Unweighted ---\n")
-result_uw <- compute_ci_unweighted(ax1)
-cat(sprintf("CI: %.4f | CI_E: %.4f | CI_W: %.4f\n", result_uw$CI, result_uw$CI_E, result_uw$CI_W))
+summary(result_ci)
+summary(result_e)
+summary(result_w)
 
+sqrt(result_w$variance)
 
-#############################################################
+###########################################################3
 
-
-ci_aten <- ax1 |>
-  filter(hs03_0033 == 1, afilsegsal != 4) |>
+ci_data2 = ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  select(log_ylab_est,qriqueza , factorexph, atenCualquiera) %>% 
   mutate(
-    y_bin = if_else(atenCualquiera == "Cualquier proveedor", 1, 0),
-    w     = factorexph
-  ) |>
-  arrange(log_ylab_est) |>
+    atencualquer = ifelse(atenCualquiera == "Cualquier proveedor", 1, 0))
+ci_data2  
+
+result_ci = ci(
+  ineqvar = as.numeric(ci_data2$qriqueza),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer)
+)
+
+result_e <- ci(
+  ineqvar = as.numeric(ci_data2$qriqueza),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer),
+  type     = "CIc"
+)
+
+result_w <- ci(
+  ineqvar = as.numeric(ci_data2$qriqueza),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer),
+  type     = "CIw"
+)
+
+summary(result_ci)
+summary(result_e)
+summary(result_w)
+
+######################################################3
+ax1$area
+
+
+ci_data3 = ax1 %>% filter(area==1) %>% filter(hs03_0033 == 1, afilsegsal != 4) %>% 
+  select(log_ylab_est,qriqueza , factorexph, atenProvedor) %>% 
   mutate(
-    cum_w = cumsum(w),
-    r     = (cum_w - 0.5 * w) / sum(w)
-  )
+    atenprov = ifelse(atenProvedor == "Proveedor", 1, 0))
+ci_data3
 
-mu_a   <- weighted.mean(ci_aten$y_bin, ci_aten$w)
-wcov_a <- cov.wt(cbind(ci_aten$y_bin, ci_aten$r), wt = ci_aten$w, method = "ML")$cov[1, 2]
-CI_a   <- 2 * wcov_a / mu_a
-CI_E_a <- 4 * mu_a * CI_a
-CI_W_a <- CI_a / (1 - mu_a)
+result_ci = ci(
+  ineqvar = as.numeric(ci_data3$qriqueza),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov)
+)
 
-cat(sprintf("Prevalence (μ):       %.4f\n", mu_a))
-cat(sprintf("Standard CI:          %.4f\n", CI_a))
-cat(sprintf("Erreygers CI:         %.4f\n", CI_E_a))
-cat(sprintf("Wagstaff CI:          %.4f\n", CI_W_a))
-cat(sprintf("Theoretical bounds:   [%.4f, %.4f]\n", mu_a - 1, 1 - mu_a))
+result_e <- ci(
+  ineqvar = as.numeric(ci_data3$qriqueza),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov),
+  type     = "CIc"
+)
 
+result_w <- ci(
+  ineqvar = as.numeric(ci_data3$qriqueza),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov),
+  type     = "CIw"
+)
 
-#########################################
-
-
-compute_ci <- function(df, y_var, ses_var, weight_var, filter_expr = NULL) {
-  if (!is.null(filter_expr)) df <- df |> filter({{ filter_expr }})
-  
-  df <- df |>
-    filter(!is.na({{ y_var }})) |>
-    mutate(
-      y_bin = as.numeric({{ y_var }}),
-      w     = {{ weight_var }}
-    ) |>
-    arrange({{ ses_var }}) |>
-    mutate(
-      cum_w = cumsum(w),
-      r     = (cum_w - 0.5 * w) / sum(w)
-    )
-  
-  mu   <- weighted.mean(df$y_bin, df$w)
-  wcov <- cov.wt(cbind(df$y_bin, df$r), wt = df$w, method = "ML")$cov[1, 2]
-  CI   <- 2 * wcov / mu
-  
-  tibble(
-    mu   = mu,
-    CI   = CI,
-    CI_E = 4 * mu * CI,
-    CI_W = CI / (1 - mu)
-  )
-}
-
-compute_ci(ax1, seg,           log_ylab_est, factorexph)
-compute_ci(ax1, atenCualquiera, log_ylab_est, factorexph, hs03_0033 == 1 & afilsegsal != 4)
-
-
-
-
-
-
-
+summary(result_ci)
+summary(result_e)
+summary(result_w)
