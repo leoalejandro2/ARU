@@ -484,6 +484,139 @@ bdf_1 %>% write_xlsx("BS_1.xlsx")
 
 ```
 
+```{r}
+library(utils)
+
+# 1. Tu función base (optimizada)
+enviar_whatsapp <- function(numero, texto) {
+  texto_url <- URLencode(texto)
+  url <- paste0("https://web.whatsapp.com/send?phone=", numero, "&text=", texto_url)
+  utils::browseURL(url)
+}
+
+# 2. Tu lista de 10 números (asegúrate de incluir el código de país, ej. 591 para Bolivia)
+lista_numeros <- c(
+  "59178846348",
+  "59160404053"
+)
+
+# 3. El mensaje que quieres enviar
+mi_mensaje <- "Hola, este es un mensaje automatizado desde mi script de R."
+
+# 4. El bucle para enviar a los 10 números
+for (i in 1:length(lista_numeros)) {
+  
+  cat("Abriendo chat para el número:", lista_numeros[i], "(", i, "de 10)\n")
+  
+  # Llama a tu función
+  enviar_whatsapp(lista_numeros[i], mi_mensaje)
+  
+  # Pausa de 4 segundos para que el navegador no colapse abriendo 10 pestañas de golpe
+  Sys.sleep(20) 
+}
+
+install.packages("chromote")
+```
+
+
+```{r}
+library(chromote)
+
+# 1. Configurar la lista de números y el mensaje
+lista_numeros <- c("59178846348","59160404053") 
+mi_mensaje <- "Hola, este mensaje se envió y se presionó Enter de forma 100% automática desde un scrip de R."
+
+# 2. Iniciar el navegador controlado por R
+b <- ChromoteSession$new()
+b$Page$navigate("https://web.whatsapp.com")
+
+# --- ¡Mucha atención aquí! ---
+# Como el navegador inicia limpio, la primera vez te mostrará el código QR.
+# El script esperará 25 segundos para que escanees el código QR con tu celular.
+cat("Por favor, escanea el código QR de WhatsApp Web en la ventana que se abrió...\n")
+Sys.sleep(25) 
+
+# 3. Bucle automático para enviar los mensajes y presionar Enter
+for (i in 1:length(lista_numeros)) {
+  
+  cat("Enviando automáticamente al número:", lista_numeros[i], "\n")
+  
+  # Formatear URL de envío directo
+  texto_url <- URLencode(mi_mensaje)
+  url_envio <- paste0("https://web.whatsapp.com/send?phone=", lista_numeros[i], "&text=", texto_url)
+  
+  # Navegar al chat del contacto
+  b$Page$navigate(url_envio)
+  
+  # Esperar 8 segundos a que cargue el chat del contacto (ajusta si tu internet es lento)
+  Sys.sleep(15) 
+  
+  # --- AQUÍ OCURRE LA MAGIA DEL ENTER ---
+  # R ejecuta un comando de JavaScript dentro de WhatsApp Web para buscar el botón de enviar y hacerle CLICK.
+  tryCatch({
+    b$Runtime$evaluate(
+      'document.querySelector("span[data-icon=\'send\']").click();'
+    )
+    cat("¡Mensaje enviado con éxito (Enter automático)!\n")
+  }, error = function(e) {
+    cat("Error: No se pudo presionar Enter para el número:", lista_numeros[i], ". Tal vez el número no tiene WhatsApp.\n")
+  })
+  
+  # Esperar 3 segundos antes de pasar al siguiente contacto para evitar sospechas de Spam
+  Sys.sleep(3)
+}
+
+cat("Proceso terminado. Ya puedes cerrar el navegador.\n")
+```
+
+
+
+```{r}
+library(utils)
+library(KeyboardSimulator)
+
+# 1. Tus 10 números (con código de país) y tu mensaje
+lista_numeros <- c("59178846348","59160404053", "59179116076") # Pon tus 10 números aquí
+mi_mensaje <- "Hola! Este mensaje se envió de forma 100% automática desde mi script de R."
+
+# 2. Bucle para automatizar el proceso
+for (i in 1:length(lista_numeros)) {
+  
+  cat("Procesando número:", lista_numeros[i], "(", i, "de", length(lista_numeros), ")\n")
+  
+  # Formatear la URL para abrir el chat con el texto ya escrito en el cuadro de mensaje
+  texto_url <- URLencode(mi_mensaje)
+  url_envio <- paste0("https://web.whatsapp.com/send?phone=", lista_numeros[i], "&text=", texto_url)
+  
+  # R abre la pestaña en tu navegador
+  utils::browseURL(url_envio)
+  
+  # --- TIEMPOS DE ESPERA CRUCIALES ---
+  # Esperamos 9 segundos a que WhatsApp Web cargue el chat y ponga el cursor sobre el cuadro de texto.
+  # (Si tu internet es lento, sube este número a 12 o 15)
+  Sys.sleep(15) 
+  
+  # --- EL ENTER AUTOMÁTICO ---
+  # R simula físicamente que presionas la tecla ENTER en tu computadora.
+  # Al estar el cursor ya posicionado en el cuadro de texto de WhatsApp, el mensaje se envía.
+  shell('powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'{ENTER}\')"')
+  
+  cat("¡Mensaje enviado exitosamente!\n")
+  
+  # Esperar 3 segundos antes de abrir el siguiente número para que no colapse el navegador
+  Sys.sleep(5)
+}
+
+cat("¡Proceso terminado con éxito!\n")
+```
+
+
+
+
+
+
+
+
 
 
 

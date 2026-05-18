@@ -41,34 +41,6 @@ eh23 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
 
 eh23V = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
-edsaV$hs04_0060 
-edsaV$hs04_0061
-edsaV$hs04_0081_12 
-
-edsaV %>% select(hs04_0060, hs04_0061, hs04_0081_12) %>% summary()
-
-eh23V$s06a_02
-eh23V$s06a_01
-eh23V$s06a_19
-edsa$tipohogar
-eh23$yhog
-
-eh23V %>% select(folio, s06a_02, s06a_01, s06a_19) %>% summary()
-
-edsa %>% select(hs01_0004a, hs01_0003, area, aestudio, hs01_0005) %>% summary()
-edsa$hs01_0005
-eh23 %>% filter() %>% select(ylab, s01a_03, s01a_02, area, aestudio, s01a_05) %>% summary()
-
-eh23$ylab
-
-edsa$hs02_0022
-
-eh23$niv_ed_g[is.na(eh23$niv_ed_g)]
-
-as_label(s01a_02) + as_label(area)  +aestudio  +as_label(s01a_05) + redad
-
-
-
 bd2 = eh23 %>% mutate(genero1 = as_label(s01a_02),
                       area1= as_label(area),
                       aestudio1 = aestudio,
@@ -127,35 +99,6 @@ bd3 = edsa %>% mutate(genero2 = as_label(hs01_0003),
                       )
 
 bd3$aestudio2[is.na(bd3$aestudio2)] = 0
-
-
-#TXZQG
-
-# eh23 = eh23 %>% left_join(eh23V %>% select(folio, s06a_02, s06a_01, s06a_19), by = "folio")
-
-
-
-eh23 %>% group_by(s04a_01,ylab) %>% count() %>% View()
-
-edsa$aestudio
-
-edsah$vs01_0148 
-edsah$vs01_0157 
-
-edsah %>% group_by(vs01_0148) %>% count() %>% summarise(n = n/sum(n))
-
-edsah %>% nrow()
-
-edsam$ms08_0809
-
-edsah$vs01_0149
-
-eh23$s04a_01
-eh23 %>% pull(aestudio) %>% summary()
-
-
-
-eh23$ylab[is.na(eh23$ylab)] <- 1
 
 ml1 = svydesign(
   ids = ~upm,
@@ -305,7 +248,7 @@ bd_deg = as_survey(desg1)
 bd_deg %>% filter(niv_ed_g != 99,afilsegsal != 4) %>% group_by(qriqueza,seg) %>% 
   summarise(n = survey_total() ) %>% mutate(prob = n/sum(n)) 
 
-bd_deg %>% 
+res1 = bd_deg %>% 
   filter(afilsegsal != 4) %>% 
   group_by(seg) %>% 
   summarise(
@@ -315,10 +258,10 @@ bd_deg %>%
     prop = n / sum(n) * 100,
     prop_low = n_low / sum(n) * 100,
     prop_upp = n_upp / sum(n) * 100
-  ) %>% View()
+  ) %>% select(seg ,prop, prop_low, prop_upp)
 
 ## atencion cualquiera
-bd_deg %>% 
+res2 = bd_deg %>% 
   filter(hs03_0033 == 1, afilsegsal != 4) %>% 
   group_by(atenCualquiera) %>% 
   summarise(
@@ -328,10 +271,10 @@ bd_deg %>%
     prop = n / sum(n) * 100,
     prop_low = n_low / sum(n) * 100,
     prop_upp = n_upp / sum(n) * 100
-  ) %>% View()
+  ) %>% select(atenCualquiera, prop, prop_low, prop_upp)
 
 ## atencion proveedor afiliado
-bd_deg %>% 
+res3 = bd_deg %>% 
   filter(hs03_0033 == 1, afilsegsal != 4) %>% 
   group_by(atenProvedor) %>% 
   summarise(
@@ -341,25 +284,94 @@ bd_deg %>%
     prop = n / sum(n) * 100,
     prop_low = n_low / sum(n) * 100,
     prop_upp = n_upp / sum(n) * 100
-  ) %>% View()
+  ) %>% select(atenProvedor, prop, prop_low, prop_upp)
 
 
 ### problema de salud
 
-bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>% 
+res4 = bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>% 
   group_by(hs03_0033) %>% 
   summarise(
     n = survey_total(vartype = "ci", level = 0.95)
   ) %>% mutate(
-    prob = n / sum(n) * 100,
-    prob_low = n_low / sum(n) * 100,
-    prob_upp = n_upp / sum(n) * 100
-  ) %>% View()
+    prop = n / sum(n) * 100,
+    prop_low = n_low / sum(n) * 100,
+    prop_upp = n_upp / sum(n) * 100
+  ) %>% select(hs03_0033, prop, prop_low, prop_upp)
 
-bd_deg
+library(tidyverse)
 
+# Combine all results into one data frame
+combined <- bind_rows(
+  res1 |> rename(category = seg) |> mutate(
+    category = as.character(category),
+    group = "Afiliación a seguro"
+  ),
+  res2 |> rename(category = atenCualquiera) |> mutate(
+    group = "Atención cualquier proveedor"
+  ),
+  res3 |> rename(category = atenProvedor) |> mutate(
+    group = "Atención proveedor"
+  ),
+  res4 |> rename(category = hs03_0033) |> mutate(
+    category = as.character(category),
+    group = "hs03_0033"
+  )
+)
 
+combined
 
+combined <- bind_rows(
+  res1 |>
+    mutate(category = sjlabelled::as_label(seg)) |>
+    select(category, prop, prop_low, prop_upp) |>
+    mutate(group = "Afiliación\na seguro"),
+  res2 |>
+    rename(category = atenCualquiera) |>
+    select(category, prop, prop_low, prop_upp) |>
+    mutate(group = "Atención\ncualquier proveedor"),
+  res3 |>
+    rename(category = atenProvedor) |>
+    select(category, prop, prop_low, prop_upp) |>
+    mutate(group = "Atención\nproveedor"),
+  res4 |>
+    mutate(category = sjlabelled::as_label(hs03_0033)) |>
+    select(category, prop, prop_low, prop_upp) |>
+    mutate(group = "Problema de\nsalud (3 meses)")
+)
+
+combined
+
+combined <- combined |>
+  mutate(tipo = if_else(
+    category %in% c("Afiliado a algun seguro", "Cualquier proveedor", "Proveedor", "1. SI"),
+    "Sí", "No"
+  ))
+###############################################
+
+ggplot(combined, aes(y = group, x = prop, fill = tipo)) +
+  geom_col(position = "stack", width = 0.6) +
+  geom_text(
+    aes(label = paste0(round(prop, 1), "%")),
+    position = position_stack(vjust = 0.5),
+    size = 3.5, color = "white", fontface = "bold"
+  ) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 20),
+                     labels = function(x) paste0(x, "%")) +
+  scale_fill_manual(values = c("Sí" = "#8B4500", "No" = "#FF7F24")) +
+  labs(x = "Proporción (%)", y = NULL, fill = NULL) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.title        = element_text(size = 11, face = "bold"),
+    axis.text         = element_text(face = "bold", color = "black"),
+    legend.position   = "right",
+    legend.justification = "center",
+    legend.key.width  = unit(0.6, "cm"),
+    legend.key.height = unit(0.4, "cm"),
+    plot.margin       = margin(10, 15, 10, 10)
+  )
+
+#########################################################################
 #######################################################################
 library(rineq)
 
@@ -373,6 +385,50 @@ result_ci = ci(
   weights  = ci_data1$factorexph,
   outcome  = as.numeric(ci_data1$seg)
 )
+
+
+library(ggplot2)
+library(dplyr)
+
+# Build concentration curve data from result_ci
+cc_data <- tibble(
+  rank    = result_ci$fractional_rank,
+  outcome = result_ci$outcome,
+  weight  = result_ci$ineqvar  # not used directly
+) |>
+  arrange(rank) |>
+  mutate(
+    cum_pop     = rank,                                          # cumulative population share
+    cum_outcome = cumsum(outcome) / sum(outcome)                 # cumulative outcome share
+  )
+
+# Add the (0,0) origin point
+cc_data <- bind_rows(tibble(cum_pop = 0, cum_outcome = 0), cc_data)
+
+ci_val <- round(result_ci$concentration_index, 4)
+
+ggplot(cc_data, aes(x = cum_pop, y = cum_outcome)) +
+  geom_line(color = "#2c7bb6", linewidth = 0.8) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.6) +
+  annotate(
+    "text", x = 0.75, y = 0.2,
+    label = paste0("CI = ", ci_val),
+    size = 4, hjust = 0
+  ) +
+  scale_x_continuous(labels = scales::percent_format(), limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    x = "Cumulative share of population\n(ranked by income, poorest to richest)",
+    y = "Cumulative share of outcome"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.title = element_text(size = 11),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+
+
+
 
 result_e <- ci(
   ineqvar = as.numeric(ci_data1$log_ylab_est),
@@ -402,29 +458,29 @@ ci_data2 = ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>%
     atencualquer = ifelse(atenCualquiera == "Cualquier proveedor", 1, 0))
 ci_data2  
 
-result_ci = ci(
+result2_ci = ci(
   ineqvar = as.numeric(ci_data2$log_ylab_est),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer)
 )
 
-result_e <- ci(
+result2_e <- ci(
   ineqvar = as.numeric(ci_data2$log_ylab_est),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer),
   type     = "CIc"
 )
 
-result_w <- ci(
+result2_w <- ci(
   ineqvar = as.numeric(ci_data2$log_ylab_est),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer),
   type     = "CIw"
 )
 
-summary(result_ci)
-summary(result_e)
-summary(result_w)
+summary(result2_ci)
+summary(result2_e)
+summary(result2_w)
 
 ######################################################3
 ax1$area
@@ -436,29 +492,29 @@ ci_data3 = ax1 %>% filter(area==1) %>% filter(hs03_0033 == 1, afilsegsal != 4) %
     atenprov = ifelse(atenProvedor == "Proveedor", 1, 0))
 ci_data3
 
-result_ci = ci(
+result3_ci = ci(
   ineqvar = as.numeric(ci_data3$log_ylab_est),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov)
 )
 
-result_e <- ci(
+result3_e <- ci(
   ineqvar = as.numeric(ci_data3$log_ylab_est),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov),
   type     = "CIc"
 )
 
-result_w <- ci(
+result3_w <- ci(
   ineqvar = as.numeric(ci_data3$log_ylab_est),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov),
   type     = "CIw"
 )
 
-summary(result_ci)
-summary(result_e)
-summary(result_w)
+summary(result3_ci)
+summary(result3_e)
+summary(result3_w)
 
 
 
@@ -475,31 +531,96 @@ ci_data1 = ax1 %>% filter(afilsegsal != 4) %>%
 
 as_numeric(ci_data1$qriqueza)
 
-result_ci = ci(
+result4_ci = ci(
   ineqvar = as.numeric(ci_data1$qriqueza),
   weights  = ci_data1$factorexph,
   outcome  = as.numeric(ci_data1$seg)
 )
 
-result_e <- ci(
+
+result4_e <- ci(
   ineqvar = as.numeric(ci_data1$qriqueza),
   weights  = ci_data1$factorexph,
   outcome  = as.numeric(ci_data1$seg),
   type     = "CIc"
 )
 
-result_w <- ci(
+result4_w <- ci(
   ineqvar = as.numeric(ci_data1$qriqueza),
   weights  = ci_data1$factorexph,
   outcome  = as.numeric(ci_data1$seg),
   type     = "CIw"
 )
 
-summary(result_ci)
-summary(result_e)
-summary(result_w)
 
-sqrt(result_w$variance)
+# Build concentration curve data from result_ci
+cc_data <- tibble(
+  rank    = result4_ci$fractional_rank,
+  outcome = result4_ci$outcome,
+  weight  = result4_ci$ineqvar  # not used directly
+) |>
+  arrange(rank) |>
+  mutate(
+    cum_pop     = rank,                                          # cumulative population share
+    cum_outcome = cumsum(outcome) / sum(outcome)                 # cumulative outcome share
+  )
+
+# Add the (0,0) origin point
+cc_data <- bind_rows(tibble(cum_pop = 0, cum_outcome = 0), cc_data)
+
+ci_val <- round(result_ci$concentration_index, 4)
+
+ggplot(cc_data, aes(x = cum_pop, y = cum_outcome)) +
+  # Línea de concentración con grosor óptimo y suavizado
+  geom_line(color = "#2c7bb6", linewidth = 1.1, linejoin = "round", linecap = "round") + 
+  # Línea de igualdad
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.7) +
+  
+  # Texto de la Curva en negrita
+  annotate("text", x = 0.30, y = 0.75, label = "Curva de concentración",
+           color = "#2c7bb6", size = 4, hjust = 0, fontface = "bold") +
+  
+  # Texto de la Línea de igualdad en negrita
+  annotate("text", x = 0.55, y = 0.45, label = "Línea de igualdad",
+           color = "gray40", size = 4, hjust = 0, fontface = "bold") +
+  scale_x_continuous(labels = scales::percent_format(), limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    x = "Proporción acumulada de la población\n(ordenada por quintiles de riqueza, del más pobre al más rico)",
+    y = "Proporción acumulada \n del acceso potencial"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    # Títulos de los ejes en negrita
+    axis.title = element_text(size = 11, face = "bold"),
+    # Texto de los ejes (los números/porcentajes) en negrita
+    axis.text = element_text(face = "bold", color = "black"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+
+
+summary(result4_ci)
+summary(result4_e)
+summary(result4_w)
+
+ax1$hs01_0003
+
+ci_data1 = ax1 %>% filter(afilsegsal != 4) %>% 
+  select(log_ylab_est,qriqueza, factorexph, seg, area, hs01_0003)
+
+result4_w <- ci(
+  ineqvar = as.numeric(ci_data1$qriqueza),
+  weights  = ci_data1$factorexph,
+  outcome  = as.numeric(ci_data1$seg),
+  type     = "CIw"
+)
+
+
+summary(result4_w)
+
+sqrt(result4_w$variance)
+
+
 
 ###########################################################3
 
@@ -509,29 +630,45 @@ ci_data2 = ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4) %>%
     atencualquer = ifelse(atenCualquiera == "Cualquier proveedor", 1, 0))
 ci_data2  
 
-result_ci = ci(
+result5_ci = ci(
   ineqvar = as.numeric(ci_data2$qriqueza),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer)
 )
 
-result_e <- ci(
+result5_e <- ci(
   ineqvar = as.numeric(ci_data2$qriqueza),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer),
   type     = "CIc"
 )
 
-result_w <- ci(
+result5_w <- ci(
   ineqvar = as.numeric(ci_data2$qriqueza),
   weights  = ci_data2$factorexph,
   outcome  = as.numeric(ci_data2$atencualquer),
   type     = "CIw"
 )
 
-summary(result_ci)
-summary(result_e)
-summary(result_w)
+summary(result5_ci)
+summary(result5_e)
+summary(result5_w)
+
+ax1$hs01_0003
+ci_data2 = ax1 %>% filter(hs03_0033 == 1, afilsegsal != 4, area == 2) %>% 
+  select(log_ylab_est,qriqueza , factorexph, atenCualquiera, area, hs01_0003) %>% 
+  mutate(
+    atencualquer = ifelse(atenCualquiera == "Cualquier proveedor", 1, 0))
+
+result5_w <- ci(
+  ineqvar = as.numeric(ci_data2$qriqueza),
+  weights  = ci_data2$factorexph,
+  outcome  = as.numeric(ci_data2$atencualquer),
+  type     = "CIw"
+)
+
+summary(result5_w)
+sqrt(result5_w$variance)
 
 ######################################################3
 ax1$area
@@ -543,26 +680,43 @@ ci_data3 = ax1 %>% filter(area==1) %>% filter(hs03_0033 == 1, afilsegsal != 4) %
     atenprov = ifelse(atenProvedor == "Proveedor", 1, 0))
 ci_data3
 
-result_ci = ci(
+result6_ci = ci(
   ineqvar = as.numeric(ci_data3$qriqueza),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov)
 )
 
-result_e <- ci(
+result6_e <- ci(
   ineqvar = as.numeric(ci_data3$qriqueza),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov),
   type     = "CIc"
 )
 
-result_w <- ci(
+result6_w <- ci(
   ineqvar = as.numeric(ci_data3$qriqueza),
   weights  = ci_data3$factorexph,
   outcome  = as.numeric(ci_data3$atenprov),
   type     = "CIw"
 )
 
-summary(result_ci)
-summary(result_e)
-summary(result_w)
+summary(result6_ci)
+summary(result6_e)
+summary(result6_w)
+
+
+ci_data3 = ax1  %>% filter(hs03_0033 == 1, afilsegsal != 4, area == 2) %>% 
+  select(log_ylab_est,qriqueza , factorexph, atenProvedor, area, hs01_0003) %>% 
+  mutate(
+    atenprov = ifelse(atenProvedor == "Proveedor", 1, 0))
+
+result6_w <- ci(
+  ineqvar = as.numeric(ci_data3$qriqueza),
+  weights  = ci_data3$factorexph,
+  outcome  = as.numeric(ci_data3$atenprov),
+  type     = "CIw"
+)
+
+summary(result6_w)
+
+sqrt(result6_w$variance)
