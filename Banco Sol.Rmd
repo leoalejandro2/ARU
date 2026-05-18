@@ -576,8 +576,8 @@ library(utils)
 library(KeyboardSimulator)
 
 # 1. Tus 10 números (con código de país) y tu mensaje
-lista_numeros <- c("59178846348","59160404053", "59179116076") # Pon tus 10 números aquí
-mi_mensaje <- "Hola! Este mensaje se envió de forma 100% automática desde mi script de R."
+lista_numeros <- c("59176252112","59178846348","59160404053", "59179116076") # Pon tus 10 números aquí
+mi_mensaje <- "Hola! Este mensaje se envió de forma 100% automática desde mi script de R \nPerdon por interrumpir."
 
 # 2. Bucle para automatizar el proceso
 for (i in 1:length(lista_numeros)) {
@@ -599,7 +599,7 @@ for (i in 1:length(lista_numeros)) {
   # --- EL ENTER AUTOMÁTICO ---
   # R simula físicamente que presionas la tecla ENTER en tu computadora.
   # Al estar el cursor ya posicionado en el cuadro de texto de WhatsApp, el mensaje se envía.
-  shell('powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'{ENTER}\')"')
+#  shell('powershell -command "Add-Type -AssemblyName System.Windows.Forms; #[System.Windows.Forms.SendKeys]::SendWait(\'{ENTER}\')"')
   
   cat("¡Mensaje enviado exitosamente!\n")
   
