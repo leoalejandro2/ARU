@@ -547,6 +547,14 @@ aux3 = aux2 %>%
    qriquez = as_label(qriqueza),
    puebloind = as_label(hs01_0010),
    edad = hs01_0004a,
+   redad = case_when(
+     hs01_0004a < 6 ~ "<= 5",
+     hs01_0004a < 18 ~ "6-17",
+     hs01_0004a < 30 ~ "18-29",
+     hs01_0004a < 45 ~ "30-44",
+     hs01_0004a < 60 ~ "45-59",
+     TRUE ~ ">= 60"
+   ),
    cuidador = as_label(cuidador),
    idiomaN = as_label(idiomaninez),
    thogar = as_label(tipohogar),
@@ -556,6 +564,7 @@ aux3 = aux2 %>%
    csalud2022 = as_label(hs03_0031),
    enfCronica = as_label(hs03_a_0041)
   )
+
 
 aux3 %>% get_label()
 aux3$hs03_0040
@@ -577,7 +586,7 @@ design = svydesign(
   ids = ~upm,
   strata = ~estrato,
   weights = ~factorexph,
-  data = (aux3)
+  data = (aux3 %>% filter())
 )
 
 #modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
@@ -587,8 +596,8 @@ design = svydesign(
 
   
 
-modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  + 
-                   naturalista2022 + csalud2022 + atenAltenativa +enfCronica +
+modelo <- svyglm(accesoS ~ area + redad + sex + seguro + qriquez  + 
+                   naturalista2022 + csalud2022 + atenAltenativa  +
                    infecciosa_f + Sangre_metabolico + cronica_f + mental_f + 
                    lesiones_f + sintomas_f + atencion_f,
                    design = design,
@@ -596,10 +605,34 @@ modelo <- svyglm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  +
 
 summary(modelo)
 
-regTermTesmodeloregTermTest(modelo, ~ area + edad + I(edad^2) + puebloind + sex + seguro + qriquez + idiomaN + niv_edu +
-              atenAltenativa +
-              infecciosas + Sangre_metabolico + mental + sistemaN + NnormalR +lesiones +atencionE + 
-              inf_A + lesion_A + mental_A + cronica_A)
+
+library(marginaleffects)
+library(tidyverse)
+
+# Calcular AME con marginaleffects (funciona con svyglm)
+ame <- avg_slopes(modelo)
+
+ame |>
+  as_tibble() |>
+  select(term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high) 
+
+
+# Ver todas las filas
+ame |>
+  as_tibble() |>
+  select(term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high) |>
+  mutate(
+    sig = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE            ~ ""
+    )
+  ) |>
+  print(n = 30) %>% View()
+
+
 
 aux3$pred <- predict(modelo, type = "response")
 aux3$pred_bin <- ifelse(aux3$pred > 0.5, 1, 0)

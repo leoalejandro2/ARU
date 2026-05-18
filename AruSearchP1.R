@@ -720,3 +720,8 @@ result6_w <- ci(
 summary(result6_w)
 
 sqrt(result6_w$variance)
+
+
+
+
+
