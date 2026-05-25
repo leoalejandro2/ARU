@@ -33,8 +33,9 @@ library(stringr)
 #bd1 = Persona_CPV.2024 %>% filter(idep==8 | idep==5)
 #save(bd1,file = "censoBP2024.RData")
 load("censoBP2024.RData")
-bd1 %>% group_by(idep,imun,iprov) %>% count() %>% View()
 
+bd1 %>% group_by(idep,imun,iprov) %>% count() %>% View()
+bd1$i00 %>% table()
 bd1 %>% names()
 
 # POTOSI
@@ -363,6 +364,34 @@ ggplot(graf2, aes(x = depto, y = porcentaje, fill = perscal)) +
     panel.grid.minor = element_blank()
   ) +
   ylim(0,100)
+
+bd1$imun
+
+bd1
+
 ```
+
+criterios de agrupacion espacial restringido
+
+espacial el criterio mas importante
+
+
+kmeans join que acepte restricciones 
+
+manzanos 
+
+
+0+idep+prov+0+imun
+
+insumos 
+
+marcoM 
+
+seleccion
+
+
+
+
+
 
 
