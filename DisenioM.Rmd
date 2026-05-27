@@ -27,12 +27,35 @@ Centro de Salud
 
 psa
 
+0+idep+prov+0+imun
+
 ```{r}
 library(dplyr)
 library(stringr)
 #bd1 = Persona_CPV.2024 %>% filter(idep==8 | idep==5)
 #save(bd1,file = "censoBP2024.RData")
 load("censoBP2024.RData")
+bd1 %>% names()
+
+
+bd1 %>% select(p53_ecivil ,p57a_uhnacmes, p57b_uhnacan) %>% pull(p53_ecivil) %>% table()
+"0"+bd1$idep 
+paste0("0", bd1$idep,bd1$iprov,"0",bd1$imun)
+  
+bd1$iprov %>% table()
+bd1$imun %>% table()
+
+
+bd1 %>% filter(p26_edad >= 15 & p26_edad <= 59) %>% select(p53_ecivil ,p57a_uhnacmes, p57b_uhnacan) %>% 
+  mutate(
+    estado = case_when(
+      p53_ecivil == 1 | p53_ecivil == 2 ~ "Unidas",
+      TRUE ~ "No unidos")) %>% group_by(p53_ecivil, estado) %>% count()
+
+
+
+
+
 
 bd1 %>% group_by(idep,imun,iprov) %>% count() %>% View()
 bd1$i00 %>% table()
@@ -368,6 +391,7 @@ ggplot(graf2, aes(x = depto, y = porcentaje, fill = perscal)) +
 bd1$imun
 
 bd1
+
 
 ```
 

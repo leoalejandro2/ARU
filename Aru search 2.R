@@ -32,53 +32,6 @@ edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
 ##################################################################3#############################
-edsa %>% get_label()
-
-edsa %>% group_by(afilsegsal) %>% count()
-##################################################################3#############################
-
-
-
-#establecimiento o servicio de salud
-
-edsa$hs03_0033
-edsa$hs03_0035_A
-edsa %>% filter(hs03_0033==1,
-                hs03_0035_A==1,   # puesto de salud
-                hs03_0035_B==1,   # centro de salud ambulatorio
-                hs03_0035_C==1,   # centro de salud con internacion
-                hs03_0035_D==1,   # centro de salud integral
-                hs03_0035_E==1,   # hospital de segundo nivel
-                hs03_0035_F==1,   # hospital de tercer nivel
-                hs03_0035_G==1,   # hospital especializado
-                hs03_0035_H==1,   # caja nacional de salud
-                hs03_0035_I==1,   # caja de la banca privada
-                hs03_0035_J==1,   # caja petrolera
-                hs03_0035_K==1,   # caja de la banca estatal
-                hs03_0035_L==1,   # cordes
-                hs03_0035_M==1,   # caja de caminos
-                hs03_0035_N==1,   # cossmil/FFAA
-                hs03_0035_O==1,   # seguro universitario
-                hs03_0035_P==1,   # organismos privados 1,2,3
-                hs03_0035_Q==1,   # iglesias 1, 2, 3
-                hs03_0035_R==1,   # promotor de la salud/RPS/otro agente
-                hs03_0035_S==1,   # visita domiciliaria
-                hs03_0035_T==1,   # Farmacia
-                hs03_0035_U==1,   # Medicina tradicional
-                hs03_0035_V==1,   # No acudio a ningun centro de salud
-                hs03_0035_X==1,   # otro lugar
-                hs03_0035_Z==1,   # no sabe
-                hs03_0035_X_cod==1,)    # especificar otro lugar
-
-
-
-
-
-
-edsa %>% get_label()
-
-edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>% 
-  group_by(hs01_0010) %>% mutate(n = n / sum(n))
 # -------------------------------
 # Disponibilidad
 # ---------------------------
@@ -94,179 +47,63 @@ edsa %>% filter(hs03_0033==1) %>% group_by(hs01_0010,hs03_0035_V) %>% count() %>
 ## Personas que no saben a donde los llevaron
 
 
-edsa$hs03_0034_X_cod %>% table()
-
-edsa$hs03_0034_X %>% table()
-
-
-
-edsa %>% get_label()
-edsa %>% get_label()
-edsa %>% select(hs03_0034_A:hs03_0034_X_cod) %>% get_label()
-  
-edsa$hs03_0034_X_cod %>% table()
-
-edsa %>% filter(hs03_0034_X_cod=="D64") %>% pull(hs03_0034_X_cod) %>% get_labels()
-
-edsa %>% mutate(
-  infecciosaP = labelled(case_when(
-    hs03_0034_X_cod %in% c("A01", "A02", "A06", "B00", "B01", "B02", "B03", "B17") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  SangreEnf = labelled(case_when(
-    hs03_0034_X_cod %in% c("D36", "D48", "D64", "D75") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  metabolismoE = labelled(case_when(
-    hs03_0034_X_cod %in% c("E14", "E34", "E66", "E80") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  mental = labelled(case_when(
-    hs03_0034_X_cod %in% c("F03","F20" ,"F48", "F50") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaN = labelled(case_when(
-    hs03_0034_X_cod %in% c("G40", "G43", "G44", "G51", "G64") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaC = labelled(case_when(
-    hs03_0034_X_cod %in% c("I00", "I10", "I52", "I70", "I72", "I82", "I84", "I86", "I89", "I95") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaR = labelled(case_when(
-    hs03_0034_X_cod %in% c("J00", "J06", "J11", "J18", "J30", "J34", "J40", "J45", "J98") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaD = labelled(case_when(
-    hs03_0034_X_cod %in% c("K36", "K38", "K46", "K65", "K76", "K82", "K92") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaM = labelled(case_when(
-    hs03_0034_X_cod %in% c("M10", "M13", "M19", "M25", "M51", "M79", "M85", "M86", "M99") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  sistemaG = labelled(case_when(
-    hs03_0034_X_cod %in% c("N39", "N42", "N50", "N64", "N94", "N95") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  embarazo = labelled(case_when(
-    hs03_0034_X_cod %in% c("O06", "O14", "O83") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  NnormalR = labelled(case_when(
-    hs03_0034_X_cod %in% c("Q02", "R04", "R05", "R07", "R11", "R41", "R45", "R50", "R52", "R58", "R73") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  lesiones = labelled(case_when(
-    hs03_0034_X_cod %in% c("T07", "T30", "W54", "W57", "W64", "Y98") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  atencion = labelled(case_when(
-    hs03_0034_X_cod %in% c("Z13", "Z21", "Z30", "Z34", "Z35", "Z39", "Z51", "Z88") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  )
-)
-  
-edsa %>% mutate(
-  
-  # Enfermedades infecciosas
-  infecciosas = labelled(case_when(
-    hs03_0034_X_cod %in% c("A01", "A02", "A06", "B00", "B01", "B02", "B03", "B17") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  # enfermedades de la sangre, tumores o trastornos endocrinos/metabólicos
-  Sangre_metabolico = labelled(case_when(
-    hs03_0034_X_cod %in% c("D36", "D48", "D64", "D75",
-                           "E14", "E34", "E66", "E80") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  
-  # enfermedades mentales
-  mental = labelled(case_when(
-    hs03_0034_X_cod %in% c("F03","F20" ,"F48", "F50") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  ## problema de salud correspondiente a enfermedades crónicas de distintos sistemas del organismo
-  sistemaN = labelled(case_when(
-    hs03_0034_X_cod %in% c("G40", "G43", "G44", "G51", "G64",
-                           "I00", "I10", "I52", "I70", "I72", "I82", "I84", "I86", "I89", "I95",
-                           "J00", "J06", "J11", "J18", "J30", "J34", "J40", "J45", "J98",
-                           "K36", "K38", "K46", "K65", "K76", "K82", "K92",
-                           "M10", "M13", "M19", "M25", "M51", "M79", "M85", "M86", "M99",
-                           "N39", "N42", "N50", "N64", "N94", "N95") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  
-  NnormalR = labelled(case_when(
-    hs03_0034_X_cod %in% c("Q02", "R04", "R05", "R07", "R11", "R41", "R45", "R50", "R52", "R58", "R73") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  lesiones = labelled(case_when(
-    hs03_0034_X_cod %in% c("T07", "T30", "W54", "W57", "W64", "Y98") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  ),
-  atencionE = labelled(case_when(
-    hs03_0034_X_cod %in% c("O06", "O14", "O83",
-                           "Z13", "Z21", "Z30", "Z34", "Z35", "Z39", "Z51", "Z88") ~ 1,
-    TRUE ~ 0 ),
-    labels = c("Si" = 1,
-               "No" = 0)
-  )
-)
-
-
-
 
 ##########################################################################################
-edsa$hs03_0039_X_cod
-is.na(edsa$hs03_0039_Z)
-
-edsa %>% select(hs03_0035_A:hs03_0035_X_cod) %>% get_label()
-
 bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
   mutate(nro=hs01_0007)
 
-aux2 = edsa %>% filter(hs01_0004a >= 0,  #edad
+ax1 = edsa %>% mutate(
+  seg = labelled(case_when(
+    afilsegsal %in% c(1,2,3,5) ~ 1,
+    afilsegsal == 6 ~ 0),labels = c(
+      "Afiliado a algun seguro" = 1,
+      "Sin afiliacion" = 0)),
+  Atencion = labelled(case_when(
+    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 |
+      hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 |
+      hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
+      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 |
+      hs03_0035_P==1 | hs03_0035_Q==1 ~ 1,
+    TRUE ~ 0
+  ),labels = c(
+    "Atendido" = 1,
+    "No Atendido" = 0
+  )),
+  AseguroSus = (case_when(
+    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 ~ "Centro de Salud"
+  )),
+  Ahospital23 = (case_when(
+    hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 ~ "Hospital de 2 y 3 nivel"
+  )), 
+  AseguroCaja = (case_when(
+    hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
+      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 ~ "Cajas de Salud"
+  )),
+  APrivado = (case_when(
+    hs03_0035_P==1 | hs03_0035_Q==1 ~ "Privado"
+  )),
+  NoAcudio = (case_when(
+    hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
+      hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1 ~ "No acudio a establecimiento"
+  )),
+  atenCualquiera = case_when(
+    (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+      (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
+         AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ "Cualquier proveedor",
+    TRUE ~ "No atencion"),
+  atenCualquiera111 = case_when(
+    (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+      (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
+         AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ 1,
+    TRUE ~ 0),
+  atenProvedor = case_when(
+    ## SUS
+    afilsegsal == 3 & (APrivado == "Privado")~ "Proveedor",
+    afilsegsal == 2 & (AseguroCaja == "Cajas de Salud" | Ahospital23 == "Hospital de 2 y 3 nivel")~ "Proveedor",
+    afilsegsal == 1 & (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel") ~ "Proveedor",
+    TRUE ~ "No Proveedor")
+)
+aux2 = ax1 %>% filter(hs01_0004a >= 0,  #edad
                 hs03_0033 == 1, # problema de salud en los ultimos 3 meses 1=si
                 # is.na(edsa$hs03_0039_Z)  # se excluyen a los que no saben donde fueron llevados
                 ) %>% 
@@ -489,36 +326,18 @@ aux2 = aux2 %>%
     atencion_f = labelled(
       ifelse(atencionE==1, 1, 0),
       labels = c("No"=0,"Si"=1)
+    ),
+    
+    # atencion en 2022
+    tradicional2022 = labelled(
+      ifelse(hs03_0030==1, 1, 0),
+      labels = c("No"=0,"Si"=1)
+    ),
+    estable2022 = labelled(
+      ifelse(hs03_0031==1, 1, 0),
+      labels = c("No"=0,"Si"=1)
     )
   )
-
-
-aux2 %>% group_by( servicio) %>% count()
-
-aux2 %>% group_by(accesoS) %>% count()
-
-desg1 = svydesign(
-  ids = ~upm,
-  strata = ~estrato,
-  weights = ~factorexph,
-  data = (aux2)
-)
-
-bd_deg = as_survey(desg1)
-
-## 
-bd_deg %>% 
-  filter(hs03_0033 == 1, afilsegsal != 4) %>% 
-  group_by(accesoS) %>% 
-  summarise(
-    n = survey_total(vartype = "ci", level = 0.95) 
-  ) %>% 
-  mutate(
-    prop = n / sum(n) * 100,
-    prop_low = n_low / sum(n) * 100,
-    prop_upp = n_upp / sum(n) * 100
-  ) 
-
 
 
 aux3 = aux2 %>% 
@@ -547,6 +366,15 @@ aux3 = aux2 %>%
    qriquez = as_label(qriqueza),
    puebloind = as_label(hs01_0010),
    edad = hs01_0004a,
+   
+   redad2 = case_when(
+     hs01_0004a <= 1 ~ "<= 1",
+     hs01_0004a <= 14 ~ "1-14",
+     hs01_0004a <= 24 ~ "15-24",
+     hs01_0004a <= 44 ~ "25-44",
+     hs01_0004a <= 64 ~ "45-64",
+     TRUE ~ ">= 65"
+   ),
    redad = case_when(
      hs01_0004a < 6 ~ "<= 5",
      hs01_0004a < 18 ~ "6-17",
@@ -560,50 +388,64 @@ aux3 = aux2 %>%
    thogar = as_label(tipohogar),
    educa = as_label(niv_ed_g),
    reg = as_label(region),
-   naturalista2022 = as_label(hs03_0030),
-   csalud2022 = as_label(hs03_0031),
+   naturalista2022 = as_label(tradicional2022),
+   csalud2022 = as_label(estable2022),
    enfCronica = as_label(hs03_a_0041)
   )
 
-
-aux3 %>% get_label()
-aux3$hs03_0040
-aux3$hs03_a_0041
-
-aux3$enfCronica %>% table()
-
-aux2 %>% get_label()
-
-aux2$hs03_0030
-aux2$hs03_0031 %>% table()
+aux3$seguro1 = relevel(as.factor(aux3$seguro), ref = "Sin seguro/ No sabe") 
 
 
-aux2 %>% group_by(hs01_0010) %>% summarise(mean(accesoS))
+aux4 = aux3 %>% filter(area=='2. Rural')
+aux3 %>% filter(area=='2. Rural')
 
-aux2 %>% group_by(hs01_0010, servicio) %>% summarise(n = n()) %>% mutate(n = n/sum(n))
 
 design = svydesign(
   ids = ~upm,
   strata = ~estrato,
   weights = ~factorexph,
-  data = (aux3 %>% filter())
+  data = (aux4)
 )
+
 
 #modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
 #                   design = design,
 #                   family = multinomial())
 
-
+## 1. Urbana 2. Rural
+aux3$seguro %>% table()
   
 
-modelo <- svyglm(accesoS ~ area + redad + sex + seguro + qriquez  + 
-                   naturalista2022 + csalud2022 + atenAltenativa  +
-                   infecciosa_f + Sangre_metabolico + cronica_f + mental_f + 
+
+modelo <- svyglm(atenCualquiera111 ~  qriquez + redad2 + sex + 
+                   seguro1 + naturalista2022 + csalud2022 + atenAltenativa +
+                   infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
                    lesiones_f + sintomas_f + atencion_f,
                    design = design,
                    family = quasibinomial())
 
+
+modelo <- svyglm(
+  accesoS ~ qriquez + redad2 + sex + 
+    seguro1 + naturalista2022 + csalud2022 + atenAltenativa +
+    infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
+    lesiones_f + sintomas_f + atencion_f,
+  
+  design = design,
+  family = quasibinomial()
+)
 summary(modelo)
+
+#qriquez2. SEGUNDO QUINTIL                  0.3163
+#qriquez3. QUINTIL INTERMEDIO               0.1084
+#qriquez4. CUARTO QUINTIL                   0.2859
+#qriquez5. QUINTIL SUPERIOR                 0.2581
+
+
+#qriquez2. SEGUNDO QUINTIL                 0.46164
+#qriquez3. QUINTIL INTERMEDIO              0.33552
+#qriquez4. CUARTO QUINTIL                  1.34290
+#qriquez5. QUINTIL SUPERIOR                0.53396
 
 
 library(marginaleffects)
@@ -634,15 +476,15 @@ ame |>
 
 
 
-aux3$pred <- predict(modelo, type = "response")
-aux3$pred_bin <- ifelse(aux3$pred > 0.5, 1, 0)
+aux4$pred <- predict(modelo, type = "response")
+aux4$pred_bin <- ifelse(aux4$pred > 0.5, 1, 0)
 
-table(aux3$pred_bin, aux3$accesoS)
+table(aux4$pred_bin, aux4$accesoS)
 
 vif(modelo)
 pR2(modelo)
 
-roc <- roc(aux3$accesoS, aux3$pred)
+roc <- roc(aux4$accesoS, aux4$pred)
 plot(roc)
 auc(roc)
 
