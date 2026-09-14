@@ -1,6 +1,8 @@
-library("oaxaca")
-library("haven")
-library("dplyr")
+rm(list = ls())
+library(tidyverse)
+library(oaxaca)
+library(haven)
+library(dplyr)
 library(ggplot2)
 library(survey)
 library(srvyr)
@@ -16,14 +18,7 @@ library(modelsummary)
 library(pscl)
 library(car)
 library(pROC)
-
-#
-eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
-eh18 = read_sav("database/EH/EH2018/EH2018_Discriminacion.sav")
-
-# edsa <- read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
-
-
+library(rineq)
 
 edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
 edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
@@ -31,42 +26,37 @@ edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 ########################################################
 
-edsah16 = read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
-edsav16 = read_sav("database/EDSA/EDSA2016/EDSA16_HOMBRES.sav")
-edsam16 = read_sav("database/EDSA/EDSA2016/EDSA16_MUJER_ANTECEDENTES.sav")
-
 pe1 = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
-
 eh23 = read_sav("database/EH/EH2023/EH2023_Persona.sav")
-
 eh23V = read_sav("database/EH/EH2023/EH2023_Vivienda.sav")
 
-bd2 = eh23 %>% mutate(genero1 = as_label(s01a_02),
-                      area1= as_label(area),
-                      aestudio1 = aestudio,
-                      relacion1 = case_when(
-                        s01a_05 == 1 ~ "Jefe/a de hogar",
-                        s01a_05 == 2 ~ "Esposo/a o conviviente",
-                        s01a_05 == 3 ~ "Hijo o entenado",
-                        s01a_05 == 4 ~ "Yerno o nuera",
-                        s01a_05 == 5 ~ "Hermano o cuñado",
-                        s01a_05 == 6 ~ "Padres",
-                        s01a_05 == 7 ~ "Suegros",
-                        s01a_05 == 8 ~ "Nietos",
-                        s01a_05 == 9 ~ "Otro Pariente",
-                        s01a_05 == 10 ~ "No Pariente",
-                        s01a_05 == 11 ~ "Empleado del hogar",
-                        s01a_05 == 12 ~ "Pariente del empleado"
-                      ),
-                      redad = case_when(
-                        s01a_03 < 6 ~ "<= 5",
-                        s01a_03 < 18 ~ "6-17",
-                        s01a_03 < 30 ~ "18-29",
-                        s01a_03 < 45 ~ "30-44",
-                        s01a_03 < 60 ~ "45-59",
-                        TRUE ~ ">= 60"
-                        )
-                      )
+bd2 = eh23 %>% mutate(
+  genero1 = as_label(s01a_02),
+  area1= as_label(area),
+  aestudio1 = aestudio,
+  relacion1 = case_when(
+    s01a_05 == 1 ~ "Jefe/a de hogar",
+    s01a_05 == 2 ~ "Esposo/a o conviviente",
+    s01a_05 == 3 ~ "Hijo o entenado",
+    s01a_05 == 4 ~ "Yerno o nuera",
+    s01a_05 == 5 ~ "Hermano o cuñado",
+    s01a_05 == 6 ~ "Padres",
+    s01a_05 == 7 ~ "Suegros",
+    s01a_05 == 8 ~ "Nietos",
+    s01a_05 == 9 ~ "Otro Pariente",
+    s01a_05 == 10 ~ "No Pariente",
+    s01a_05 == 11 ~ "Empleado del hogar",
+    s01a_05 == 12 ~ "Pariente del empleado"
+    ),
+  redad = case_when(
+    s01a_03 < 6 ~ "<= 5",
+    s01a_03 < 18 ~ "6-17",
+    s01a_03 < 30 ~ "18-29",
+    s01a_03 < 45 ~ "30-44",
+    s01a_03 < 60 ~ "45-59",
+    TRUE ~ ">= 60"
+    )
+  )
 
 bd2$aestudio1[is.na(eh23$aestudio)] = 0
 bd2$ylab[is.na(eh23$ylab)] <- 1
@@ -299,7 +289,7 @@ res4 = bd_deg %>% filter(hs03_0033 %in% c(1,2)) %>%
     prop_upp = n_upp / sum(n) * 100
   ) %>% select(hs03_0033, prop, prop_low, prop_upp)
 
-library(tidyverse)
+
 
 # Combine all results into one data frame
 combined <- bind_rows(
@@ -373,7 +363,7 @@ ggplot(combined, aes(y = group, x = prop, fill = tipo)) +
 
 #########################################################################
 #######################################################################
-library(rineq)
+
 
 ci_data1 = ax1 %>% filter(afilsegsal != 4) %>% 
   select(log_ylab_est, factorexph, seg)
