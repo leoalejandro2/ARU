@@ -104,6 +104,11 @@ aux = bd_edsa %>% filter(hs03_0033 == 1) %>% ## problema de salud, ultimos 3 mes
   ) %>% 
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) 
 
+aux |> filter((SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) |> 
+  View()
+
+### se eliminan casos que no saben donde fueron llevados y un caso que si tiene problemas
+### de salud pero que no indico a donde fue para resolver
 aux2 = aux %>% 
   filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>% 
   mutate(servicio = case_when(
