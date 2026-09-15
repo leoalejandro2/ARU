@@ -1,3 +1,5 @@
+rm(list = ls())
+
 library("oaxaca")
 library("haven")
 library("dplyr")
@@ -17,96 +19,82 @@ library(pscl)
 library(car)
 library(pROC)
 
-
-
-eh23 = read_sav("database/EH/EH2023/EH2023_Discriminacion.sav")
-eh18 = read_sav("database/EH/EH2018/EH2018_Discriminacion.sav")
-
-# edsa <- read_sav("database/EDSA/EDSA2016/EDSA16_HOGAR.sav")
-
-
-
 edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
 edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
-
-##################################################################3#############################
-# -------------------------------
-# Disponibilidad
-# ---------------------------
-
-## se estan filtrando a las personas que han tenido un problema de salud en los ultimos 3 meses, 
-## ademas de que se esta excluyendo a las personas que reportan que no fueron a un centro de salud debido a que no lo
-## consideraban grave o que no saben por que no fueron
-
-
-## se excluyen a las personas menores a 16 anios
-# personas que no buscaron algun centro de salud por que no lo consideraban grave
-## solo a las personas que reportan haber persentado algun problema de salud
-## Personas que no saben a donde los llevaron
-
-
-
 ##########################################################################################
 bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
   mutate(nro=hs01_0007)
 
-ax1 = edsa %>% mutate(
-  seg = labelled(case_when(
+edsa |> get_label()
+
+bd_edsa = edsa %>% mutate(
+  seguro = labelled(case_when(
     afilsegsal %in% c(1,2,3,5) ~ 1,
-    afilsegsal == 6 ~ 0),labels = c(
+    afilsegsal == 6 ~ 0,
+    TRUE ~ NA_real_),labels = c(
       "Afiliado a algun seguro" = 1,
       "Sin afiliacion" = 0)),
-  Atencion = labelled(case_when(
-    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 |
-      hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 |
-      hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
-      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 |
-      hs03_0035_P==1 | hs03_0035_Q==1 ~ 1,
-    TRUE ~ 0
-  ),labels = c(
+  
+  atencion = labelled(case_when( (hs03_0033 == 1) &
+    (hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 |
+      hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 | hs03_0035_H==1 | 
+      hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 | hs03_0035_L==1 | 
+      hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 | hs03_0035_P==1 | 
+      hs03_0035_Q==1) ~ 1,
+    (hs03_0033 == 1) &
+    (hs03_0035_R==1 | hs03_0035_S==1 | hs03_0035_T==1 | hs03_0035_U==1 | 
+      hs03_0035_V==1 | hs03_0035_X==1 | hs03_0035_Z==1) ~ 0,
+    TRUE ~ NA_real_),labels = c(
     "Atendido" = 1,
-    "No Atendido" = 0
+    "No Atendido" = 0)),
+  
+  aseguro_sus = (case_when(
+    (hs03_0033 == 1) &
+    (hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1) ~ "Centro de Salud"
   )),
-  AseguroSus = (case_when(
-    hs03_0035_A==1 | hs03_0035_B==1 | hs03_0035_C==1 | hs03_0035_D==1 ~ "Centro de Salud"
-  )),
-  Ahospital23 = (case_when(
-    hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 ~ "Hospital de 2 y 3 nivel"
+  ahospital23 = (case_when(
+    (hs03_0033 == 1) &
+    (hs03_0035_E==1 | hs03_0035_F==1 | hs03_0035_G==1 )~ "Hospital de 2 y 3 nivel"
   )), 
-  AseguroCaja = (case_when(
-    hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
-      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1 ~ "Cajas de Salud"
+  aseguro_caja = (case_when(
+    (hs03_0033 == 1) &
+    (hs03_0035_H==1 | hs03_0035_I==1 | hs03_0035_J==1 | hs03_0035_K==1 |
+      hs03_0035_L==1 | hs03_0035_M==1 | hs03_0035_N==1 | hs03_0035_O==1) ~ "Cajas de Salud"
   )),
-  APrivado = (case_when(
-    hs03_0035_P==1 | hs03_0035_Q==1 ~ "Privado"
+  aprivado = (case_when(
+    (hs03_0033 == 1) &
+    (hs03_0035_P==1 | hs03_0035_Q==1)~ "Privado"
   )),
-  NoAcudio = (case_when(
-    hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
-      hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1 ~ "No acudio a establecimiento"
+  no_acudio = (case_when(
+    (hs03_0033 == 1) &
+    (hs03_0035_R == 1 | hs03_0035_S == 1 | hs03_0035_T == 1 | hs03_0035_U == 1 | 
+      hs03_0035_V == 1 | hs03_0035_X == 1 | hs03_0035_Z == 1) ~ "No acudio a establecimiento"
   )),
-  atenCualquiera = case_when(
-    (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
-      (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
-         AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ "Cualquier proveedor",
-    TRUE ~ "No atencion"),
-  atenCualquiera111 = case_when(
-    (afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
-      (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel" | 
-         AseguroCaja == "Cajas de Salud" | APrivado == "Privado") ~ 1,
-    TRUE ~ 0),
-  atenProvedor = case_when(
-    ## SUS
-    afilsegsal == 3 & (APrivado == "Privado")~ "Proveedor",
-    afilsegsal == 2 & (AseguroCaja == "Cajas de Salud" | Ahospital23 == "Hospital de 2 y 3 nivel")~ "Proveedor",
-    afilsegsal == 1 & (AseguroSus == "Centro de Salud" | Ahospital23== "Hospital de 2 y 3 nivel") ~ "Proveedor",
-    TRUE ~ "No Proveedor")
+  aten_cualquiera = case_when(
+    (hs03_0033 == 1) &
+    ((afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+      (aseguro_sus == "Centro de Salud" | ahospital23== "Hospital de 2 y 3 nivel" | 
+         aseguro_caja == "Cajas de Salud" | aprivado == "Privado")) ~ "Cualquier proveedor",
+    (hs03_0033 == 1) ~ "No atencion",
+    TRUE ~ NA_character_),
+  aten_cualquiera111 = case_when(
+    (hs03_0033 == 1) &
+    ((afilsegsal == 1 | afilsegsal == 2 | afilsegsal == 3 | afilsegsal == 5) & 
+      (aseguro_sus == "Centro de Salud" | ahospital23== "Hospital de 2 y 3 nivel" | 
+         aseguro_caja == "Cajas de Salud" | aprivado == "Privado")) ~ 1,
+    (hs03_0033 == 1) ~ 0,
+    TRUE ~ NA_real_),
+  aten_provedor = case_when(
+    (hs03_0033 == 1) & (afilsegsal == 3 & (aprivado == "Privado"))~ "Proveedor",
+    (hs03_0033 == 1) & (afilsegsal == 2 & (aseguro_caja == "Cajas de Salud" | ahospital23 == "Hospital de 2 y 3 nivel"))~ "Proveedor",
+    (hs03_0033 == 1) & (afilsegsal == 1 & (aseguro_sus == "Centro de Salud" | ahospital23== "Hospital de 2 y 3 nivel")) ~ "Proveedor",
+    (hs03_0033 == 1) ~ "No Proveedor",
+    TRUE ~ NA_character_)
 )
-aux2 = ax1 %>% filter(hs01_0004a >= 0,  #edad
-                hs03_0033 == 1, # problema de salud en los ultimos 3 meses 1=si
-                # is.na(edsa$hs03_0039_Z)  # se excluyen a los que no saben donde fueron llevados
-                ) %>% 
+
+aux = bd_edsa %>% filter(hs03_0033 == 1) %>% ## problema de salud, ultimos 3 meses
   mutate(
     SectorPublico = rowSums(across(hs03_0035_A:hs03_0035_O) == 1, na.rm = TRUE),
     SectorPrivado = rowSums(across(hs03_0035_P:hs03_0035_Q) == 1, na.rm = TRUE),
@@ -114,10 +102,9 @@ aux2 = ax1 %>% filter(hs01_0004a >= 0,  #edad
     noFue = rowSums(across(hs03_0035_V) == 1, na.rm = TRUE),
     noSabe = rowSums(across(hs03_0035_Z) == 1, na.rm = TRUE)
   ) %>% 
-  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) %>% 
-  left_join(bd1, by = c("folio","nro"))
+  left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) 
 
-aux2 = aux2 %>% 
+aux2 = aux %>% 
   filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>% 
   mutate(servicio = case_when(
     SectorPublico >= 1 | SectorPrivado >= 1 ~ "Acceso a establecimiento de Salud",
@@ -543,44 +530,16 @@ vif(modelo_logit) # Valores > 5 o 10 sugieren problemas
 
 
 
-# -------------------------------
-# Accesibilidad
-# -------------------------------
-edsa %>% select(hs03_0035_A:hs03_0035_Z)
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
 
 
 
-# Localización de los servicios de salud y de los usuarios,
-# incluyendo recursos de transporte, tiempo, distancia y costo
 
 
-# -------------------------------
-# Alojamiento (Accommodation)
-# -------------------------------
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
-edsa %>% select(hs03_b_0046:hs03_b_0048)
-
-# Forma en que los servicios de salud están organizados
-# para atender a los usuarios (horarios, turnos, tiempos de espera)
 
 
-# -------------------------------
-# Asequibilidad
-# -------------------------------
-edsa %>% select(hs03_0029_A:hs03_0029_X_cod)
-edsa %>% select(hs03_0039_A:hs03_0039_Z)
+#########################################################################################
+######### hasta aca #########
 
-
-edsa %>% filter(hs03_0033 == 1, hs03_0039_J==1)
-
-
-# Relación entre el costo de los servicios y la capacidad
-# de pago de los usuarios
-# Incluye:
-# - Existencia de seguro médico
-# - Percepción del costo
-# - Gastos en atención de salud
 
 
 # -------------------------------
