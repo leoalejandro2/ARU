@@ -31,6 +31,9 @@ edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
 
+
+
+
 ##################################################################3#############################
 # -------------------------------
 # Disponibilidad

@@ -242,6 +242,50 @@ desg1 = svydesign(
 
 bd_deg = as_survey(desg1)
 
+ax1$area
+
+bd_deg %>% 
+  filter(afilsegsal != 4) %>% 
+  group_by(afilsegsal) %>% 
+  summarise(
+    prop = survey_mean(vartype = "ci", level = 0.95)
+  ) %>% 
+  mutate(
+    p = prop * 100,
+    p_low = prop_low * 100,
+    p_upp = prop_upp * 100
+  ) %>% 
+  select(afilsegsal, p, p_low, p_upp)
+
+bd_deg %>% filter(area == 1) %>% 
+  filter(afilsegsal != 4) %>% 
+  group_by(afilsegsal) %>% 
+  summarise(
+    prop = survey_mean(vartype = "ci", level = 0.95)
+  ) %>% 
+  mutate(
+    p = prop * 100,
+    p_low = prop_low * 100,
+    p_upp = prop_upp * 100
+  ) %>% 
+  select(afilsegsal, p, p_low, p_upp)
+
+bd_deg %>% filter(area == 2) %>% 
+  filter(afilsegsal != 4) %>% 
+  group_by(afilsegsal) %>% 
+  summarise(
+    prop = survey_mean(vartype = "ci", level = 0.95)
+  ) %>% 
+  mutate(
+    p = prop * 100,
+    p_low = prop_low * 100,
+    p_upp = prop_upp * 100
+  ) %>% 
+  select(afilsegsal, p, p_low, p_upp)
+
+
+
+
 ## 
 
 ### Seguro
