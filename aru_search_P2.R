@@ -23,34 +23,8 @@ edsa = read_sav("database/EDSA/EDSA2023/EDSA2023_Hogar.sav")
 edsaV = read_sav("database/EDSA/EDSA2023/EDSA2023_Vivienda.sav")
 edsah = read_sav("database/EDSA/EDSA2023/EDSA2023_Hombre.sav")
 edsam = read_sav("database/EDSA/EDSA2023/EDSA2023_Mujer.sav")
-<<<<<<< HEAD:Aru search 2.R
 
-
-
-
-##################################################################3#############################
-# -------------------------------
-# Disponibilidad
-# ---------------------------
-
-## se estan filtrando a las personas que han tenido un problema de salud en los ultimos 3 meses, 
-## ademas de que se esta excluyendo a las personas que reportan que no fueron a un centro de salud debido a que no lo
-## consideraban grave o que no saben por que no fueron
-
-
-## se excluyen a las personas menores a 16 anios
-# personas que no buscaron algun centro de salud por que no lo consideraban grave
-## solo a las personas que reportan haber persentado algun problema de salud
-## Personas que no saben a donde los llevaron
-
-
-
-=======
->>>>>>> 6c0074f1cd0f2e26aaac78509dcf88087e285de4:aru_search_P2.R
 ##########################################################################################
-bd1 = edsa %>% filter(hs01_0007>0 & hs01_0007<90) %>% group_by(folio, hs01_0007) %>% count() %>% 
-  mutate(nro=hs01_0007)
-
 edsa |> get_label()
 
 bd_edsa = edsa %>% mutate(
@@ -118,6 +92,8 @@ bd_edsa = edsa %>% mutate(
     TRUE ~ NA_character_)
 )
 
+
+
 aux = bd_edsa %>% filter(hs03_0033 == 1) %>% ## problema de salud, ultimos 3 meses
   mutate(
     SectorPublico = rowSums(across(hs03_0035_A:hs03_0035_O) == 1, na.rm = TRUE),
@@ -128,38 +104,21 @@ aux = bd_edsa %>% filter(hs03_0033 == 1) %>% ## problema de salud, ultimos 3 mes
   ) %>% 
   left_join(edsaV, by = c("folio","upm","estrato","area","region","departamento")) 
 
-aux |> filter((SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) |> 
-  View()
-
 ### se eliminan casos que no saben donde fueron llevados y un caso que si tiene problemas
 ### de salud pero que no indico a donde fue para resolver
-aux2 = aux %>% 
-  filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>% 
-  mutate(servicio = case_when(
-    SectorPublico >= 1 | SectorPrivado >= 1 ~ "Acceso a establecimiento de Salud",
-    atencionAlt >= 1 ~ "Acceso a atencion alternativa",
-    TRUE ~ "No accedió a atención"
-  ),
-  accesoS = case_when(
-    SectorPublico >= 1 | SectorPrivado >= 1 ~ "Acceso a establecimiento de Salud",
-    TRUE ~ "No accedió a atención"
-  ),
-  atenAltenativa = case_when(
-    atencionAlt >= 1  ~ "Busco atencion alternativa",
-    TRUE ~ "No busco atencion alternativa"
-  ))
-######################################################################################
-######################################################################################
-aux2 = aux2 %>% 
+### Para los casos en donde indica que fue a un establecimiento y no fue, se toma como
+### que si logro ingresar al establecimiento pero no logro obtener atencion.
+aux2 = aux  %>% 
   filter(!(SectorPublico ==0 & SectorPrivado ==0 & atencionAlt ==0 & noFue ==0)) %>%
   mutate(
     
     # Variable 3 categorías
     servicio = labelled(
       case_when(
-        SectorPublico >= 1 | SectorPrivado >= 1 ~ 1,
-        atencionAlt >= 1 ~ 2,
-        TRUE ~ 3
+        (SectorPublico >= 1 | SectorPrivado >= 1) & noFue == 0 ~ 1,
+        atencionAlt >= 1  ~ 2,
+        noFue == 1 ~ 3,
+        TRUE ~ NA_real_
       ),
       labels = c(
         "Acceso a establecimiento de Salud" = 1,
@@ -171,8 +130,9 @@ aux2 = aux2 %>%
     # Variable binaria acceso formal
     accesoS = labelled(
       case_when(
-        SectorPublico >= 1 | SectorPrivado >= 1 ~ 1,
-        TRUE ~ 0
+        (SectorPublico >= 1 | SectorPrivado >= 1) & noFue == 0 ~ 1,
+        atencionAlt >= 1 | noFue >= 1 ~ 0,
+        TRUE ~ NA_real_
       ),
       labels = c(
         "No accedió a atención" = 0,
@@ -190,15 +150,6 @@ aux2 = aux2 %>%
         "No busco atencion alternativa" = 0,
         "Busco atencion alternativa" = 1
       )
-    ),
-    cuidador = labelled(
-      case_when(
-        n>0 ~ 1,
-        TRUE ~ 0
-      ), labels = c(
-        "cuidador" = 1,
-        "no cuidador" = 0
-      ) 
     ),
     tipo_salud = case_when(
       
@@ -355,13 +306,12 @@ aux2 = aux2 %>%
     )
   )
 
-
 aux3 = aux2 %>% 
   mutate(
     area = as_label(area),
     atenAltenativa = as_label(atenAltenativa),
     sex = as_label(hs01_0003),
-    niv_edu = ifelse(niv_ed_g==99,NA,niv_ed_g),
+    niv_edu = ifelse(niv_ed_g==99 , NA,niv_ed_g),
     niv_edu = as_label(labelled(niv_edu, labels = c(
       "Ninguno" = 0,
       "Primaria" = 1,
@@ -372,25 +322,17 @@ aux3 = aux2 %>%
       afilsegsal == 1 ~ 1,
       afilsegsal == 2 ~ 2,
       afilsegsal == 3 ~ 3,
-      afilsegsal %in% c(4,5,6) ~ 4
+      afilsegsal %in% c(5,6) ~ 4,
+      TRUE ~ NA_real_
     ),labels = c(
       "SUS" = 1,
       "Cajas de Salud" = 2,
       "Seguro Privado" = 3,
-      "Sin seguro/ No sabe" =4
+      "Sin seguro" = 4
    ))),
    qriquez = as_label(qriqueza),
    puebloind = as_label(hs01_0010),
    edad = hs01_0004a,
-   
-   redad2 = case_when(
-     hs01_0004a <= 1 ~ "<= 1",
-     hs01_0004a <= 14 ~ "1-14",
-     hs01_0004a <= 24 ~ "15-24",
-     hs01_0004a <= 44 ~ "25-44",
-     hs01_0004a <= 64 ~ "45-64",
-     TRUE ~ ">= 65"
-   ),
    redad = case_when(
      hs01_0004a < 6 ~ "<= 5",
      hs01_0004a < 18 ~ "6-17",
@@ -399,54 +341,87 @@ aux3 = aux2 %>%
      hs01_0004a < 60 ~ "45-59",
      TRUE ~ ">= 60"
    ),
-   cuidador = as_label(cuidador),
+   redad2 = case_when(
+     hs01_0004a >= 0  & hs01_0004a < 5  ~ "0-4",
+     hs01_0004a >= 5  & hs01_0004a < 10 ~ "5-9",
+     hs01_0004a >= 10 & hs01_0004a < 15 ~ "10-14",
+     hs01_0004a >= 15 & hs01_0004a < 20 ~ "15-19",
+     hs01_0004a >= 20 & hs01_0004a < 25 ~ "20-24",
+     hs01_0004a >= 25 & hs01_0004a < 35 ~ "25-34",
+     hs01_0004a >= 35 & hs01_0004a < 45 ~ "35-44",
+     hs01_0004a >= 45 & hs01_0004a < 55 ~ "45-54",
+     hs01_0004a >= 55 & hs01_0004a < 65 ~ "55-64",
+     TRUE ~ ">= 65"
+   ),
+   redad3 = case_when(
+     hs01_0004a >= 1  &hs01_0004a < 2  ~ "<= 1",
+     hs01_0004a >= 2  &hs01_0004a < 15 ~ "2-14",
+     hs01_0004a >= 15 &hs01_0004a < 25 ~ "15-24",
+     hs01_0004a >= 25 &hs01_0004a < 45 ~ "25-44",
+     hs01_0004a >= 45 &hs01_0004a < 65 ~ "45-64",
+     TRUE ~ ">= 65"
+   ),
    idiomaN = as_label(idiomaninez),
    thogar = as_label(tipohogar),
    educa = as_label(niv_ed_g),
    reg = as_label(region),
    naturalista2022 = as_label(tradicional2022),
    csalud2022 = as_label(estable2022),
-   enfCronica = as_label(hs03_a_0041)
+   enf_diagnosticada = as_label(labelled(case_when(
+     hs03_a_0041 == 1 ~ 1,
+     hs03_a_0041 == 2 ~ 2,
+     TRUE ~ NA_real_
+   ),labels = c(
+     "Si" = 1,
+     "No" = 2))),
+   calidad_vida = as_label(labelled(case_when(
+     cviv == -1 ~ -1,
+     cviv == 0 ~ 0,
+     cviv == 1 ~ 1,
+     TRUE ~ NA_real_
+   ),labels = c(
+     "CALIDAD BAJA" = -1,
+     "CALIDAD MEDIA" = 0,
+     "CALIDAD ALTA" = 1))),
+   region = as_label(region)
   )
 
-aux3$seguro1 = relevel(as.factor(aux3$seguro), ref = "Sin seguro/ No sabe") 
+aux3$seguro1 = relevel(as.factor(aux3$seguro), ref = "Sin seguro") 
 
 
-aux4 = aux3 %>% filter(area=='2. Rural')
-aux3 %>% filter(area=='2. Rural')
+aux4 = aux3 |> select(folio, nro, upm, estrato, area, region, departamento, idiomaninez,
+               sex,niv_ed_g, niv_ed, aestudio, tipohogar, nro_tot, afilsegsal, seguro,
+               atencion, aseguro_sus, ahospital23, aseguro_caja, aprivado, no_acudio,
+               aten_cualquiera, aten_cualquiera111, aten_provedor, SectorPublico,
+               SectorPrivado, atencionAlt, noFue, noSabe, qriqueza, cviv, calidad_vida, servicio, 
+               accesoS,atenAltenativa,tipo_salud, inf_A, lesion_A, mental_A, cronica_A,
+               icd, inf_X, lesion_X, mental_X, cronica_X, infecciosa, lesion,
+               mental, cronica, infecciosas, Sangre_metabolico, sistemaN,
+               NnormalR, lesiones, atencionE, infecciosa_f, cronica_f, mental_f,
+               lesiones_f, sintomas_f, atencion_f,tradicional2022, estable2022,
+               sex, niv_ed, qriquez, puebloind, edad, redad, redad2,redad3, idiomaN, thogar,
+               educa, reg, naturalista2022, csalud2022, enf_diagnosticada, seguro1, factorexph)
+'1. Urbana'
+'2. Rural'
+
+aux5 = aux4 %>% 
+  drop_na(aten_cualquiera111, qriquez, redad3, sex, seguro1, naturalista2022, 
+          csalud2022, atenAltenativa, infecciosa_f, Sangre_metabolico, 
+          cronica_f, mental_f, lesiones_f, sintomas_f, atencion_f,calidad_vida) |> 
+  filter(area=='2. Rural')
 
 
 design = svydesign(
   ids = ~upm,
   strata = ~estrato,
   weights = ~factorexph,
-  data = (aux4)
+  data = (aux5)
 )
-
-
-#modelo <- svy_vglm(servicio ~ area + atenAltenativa + sex + niv_edu + seguro,
-#                   design = design,
-#                   family = multinomial())
-
 ## 1. Urbana 2. Rural
-aux3$seguro %>% table()
-  
-
-
-modelo <- svyglm(atenCualquiera111 ~  qriquez + redad2 + sex + 
-                   seguro1 + naturalista2022 + csalud2022 + atenAltenativa +
-                   infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
-                   lesiones_f + sintomas_f + atencion_f,
-                   design = design,
-                   family = quasibinomial())
-
-
-modelo <- svyglm(
-  accesoS ~ qriquez + redad2 + sex + 
-    seguro1 + naturalista2022 + csalud2022 + atenAltenativa +
-    infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
+modelo <- svyglm( 
+  accesoS ~ sex + redad3 + seguro1 + csalud2022 +naturalista2022 +
+    qriquez  + infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
     lesiones_f + sintomas_f + atencion_f,
-  
   design = design,
   family = quasibinomial()
 )
@@ -492,15 +467,15 @@ ame |>
 
 
 
-aux4$pred <- predict(modelo, type = "response")
-aux4$pred_bin <- ifelse(aux4$pred > 0.5, 1, 0)
+aux5$pred <- predict(modelo, type = "response")
+aux5$pred_bin <- ifelse(aux5$pred > 0.5, 1, 0)
 
-table(aux4$pred_bin, aux4$accesoS)
+table(aux5$pred_bin, aux5$accesoS)
 
 vif(modelo)
 pR2(modelo)
 
-roc <- roc(aux4$accesoS, aux4$pred)
+roc <- roc(aux5$accesoS, aux5$pred)
 plot(roc)
 auc(roc)
 
@@ -521,11 +496,10 @@ pseudo_r2_adj
 
 #############################################################################################################
 
-modelo_logit <- glm(accesoS ~ area + edad + puebloind + sex + seguro + qriquez  + 
-                      naturalista2022 + csalud2022 + atenAltenativa +enfCronica +
-                      infecciosa_f + Sangre_metabolico + cronica_f + mental_f + 
+modelo_logit <- glm(accesoS ~ sex + redad3 + seguro1 + csalud2022 +naturalista2022 +
+                      qriquez  + infecciosa_f + Sangre_metabolico + cronica_f + mental_f +
                       lesiones_f + sintomas_f + atencion_f, 
-                    data = aux3, family = "binomial")
+                    data = aux5, family = "binomial")
 
 # Ver el resumen del modelo
 summary(modelo_logit)
@@ -541,7 +515,7 @@ library(ResourceSelection)
 hoslem.test(modelo_logit$y, fitted(modelo_logit))
 
 predicciones <- ifelse(predict(modelo_logit, type = "response") > 0.5, 1, 0)
-tabla_confusion <- table(Predicho = predicciones, Real = aux3$accesoS)
+tabla_confusion <- table(Predicho = predicciones, Real = aux5$accesoS)
 print(tabla_confusion)
 
 # Precisión global
@@ -549,7 +523,7 @@ sum(diag(tabla_confusion)) / sum(tabla_confusion)
 
 
 library(pROC)
-roc_obj <- roc(aux3$accesoS, fitted(modelo_logit))
+roc_obj <- roc(aux5$accesoS, fitted(modelo_logit))
 plot(roc_obj, main = "Curva ROC")
 auc(roc_obj)
 
